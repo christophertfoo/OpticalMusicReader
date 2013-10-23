@@ -2,9 +2,7 @@ package edu.hawaii.omr;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class StaffLineFinder {
@@ -14,6 +12,7 @@ public class StaffLineFinder {
   public StaffLineFinder(BufferedImage image) throws NotGrayscaleException {
     OtsuRunner thresholder = new OtsuRunner(image);
     this.image = Helpers.createBinaryImage(image, thresholder.getThreshold());
+    Helpers.writeGifImage(this.image, "binary.gif");
   }
 
   public int[] getVerticalHistogram() {
@@ -27,6 +26,30 @@ public class StaffLineFinder {
       }
     }
     return histogram;
+  }
+
+  public int maxValue(int[] histogram) {
+    int maxValue = 0;
+    for(int count : histogram) {
+      if(count > maxValue) {
+        maxValue = count;
+      }
+    }
+    return maxValue;
+  }
+  
+  public int[] thresholdHistogram(int[] histogram, double percentage) {
+    int[] thresholded = histogram.clone();
+    double threshold = percentage * this.maxValue(histogram);
+    for(int i = 0, length = histogram.length; i < length; i++) {
+      if(histogram[i] < threshold) {
+        thresholded[i] = 0;
+      }
+      else {
+        thresholded[i] = histogram[i];
+      }
+    }
+    return thresholded;
   }
 
   public int[] findMaxima(int[] histogram) {
@@ -51,7 +74,7 @@ public class StaffLineFinder {
       int current, next;
       current = firstDerivative[i];
       next = firstDerivative[i + 1];
-      if ((current > 0 && next < 0) || (current < 0 && next > 0)) {
+      if (current > 0 && next < 0) {
         if (histogram[i] > histogram[i + 1]) {
           maxArray[i]= histogram[i];
         }
