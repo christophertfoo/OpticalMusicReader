@@ -2,8 +2,11 @@ package edu.hawaii.omr;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 
 public class StaffLineFinder {
 
@@ -12,7 +15,48 @@ public class StaffLineFinder {
   public StaffLineFinder(BufferedImage image) throws NotGrayscaleException {
     OtsuRunner thresholder = new OtsuRunner(image);
     this.image = Helpers.createBinaryImage(image, thresholder.getThreshold());
+    for(int i = 0, height = this.image.getHeight(); i < height; i++) {
+      for(int j = 0, width = this.image.getWidth(); j < width; j++) {
+        if(this.image.getRGB(j, i) != 0xFF000000 && this.image.getRGB(j, i) != 0xFFFFFFFF) {
+          System.out.format("%x\n", this.image.getRGB(j, i));
+        }
+      }
+    }
     Helpers.writeGifImage(this.image, "binary.gif");
+  }
+  
+  public void getConnectedHistogram(double widthPercent) {
+    ConnectedComponentFinder finder = new ConnectedComponentFinder();
+    finder.findConnectedComponents(this.image, 0xFF000000);
+    Helpers.labelsToCsv(finder.getLabels(), "labels.csv");
+    double widthThreshold = this.image.getWidth() * widthPercent;
+    Map<Integer, SortedSet<Point<Object>>> labels = finder.getLabelPoints();
+    List<Integer> keysToRemove = new ArrayList<>();
+    for(Integer label : labels.keySet()) {
+      SortedSet<Point<Object>> labelPoints = labels.get(label);
+      if(labelPoints.last().getX() - labelPoints.first().getX() < widthThreshold) {
+        keysToRemove.add(label);
+      }
+    }
+    
+    for(Integer key : keysToRemove) {
+      labels.remove(key);
+    }
+    
+    BufferedImage modified = new BufferedImage(this.image.getWidth(), this.image.getHeight(), BufferedImage.TYPE_INT_RGB);
+    for(int i = 0, height = this.image.getHeight(); i < height; i++) {
+      for(int j = 0, width = this.image.getWidth(); j < width; j++) {
+        modified.setRGB(j, i, 0xFFFFFF);
+      }
+    }
+    
+    for(Integer label : labels.keySet()) {
+      SortedSet<Point<Object>> labelPoints = labels.get(label);
+      for(Point<Object> point : labelPoints) {
+        modified.setRGB((int) point.getX(), (int) point.getY(), 0x000000);
+      }
+    }
+    Helpers.writeGifImage(modified, "test.gif");
   }
 
   public int[] getVerticalHistogram() {

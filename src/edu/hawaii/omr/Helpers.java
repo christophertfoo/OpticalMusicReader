@@ -171,4 +171,33 @@ public class Helpers {
       System.err.println(e.getMessage());
     }
   }
+  
+  /**
+   * Writes the given 2D int array to a CSV file at the given path.
+   * 
+   * @param values
+   *          The values to be written.
+   * @param path
+   *          The path of the resulting CSV file.
+   */
+  public static void labelsToCsv(int[][] values, String path) {
+    try {
+      FileWriter writer = new FileWriter(new File(path));
+      for (int i = 0; i < values.length; i++) {
+        for (int j = 0; j < values[i].length; j++) {
+          if (j == 0) {
+            writer.write(String.valueOf(values[i][j]));
+          }
+          else {
+            writer.write("," + String.valueOf(values[i][j]));
+          }
+        }
+        writer.write('\n');
+      }
+      writer.close();
+    }
+    catch (IOException e) {
+      System.err.println(e.getMessage());
+    }
+  }
 }

@@ -4,10 +4,13 @@ import java.awt.image.BufferedImage;
 
 public class Driver {
   public static void main(String[] args) {
-    BufferedImage sheet = Helpers.readImage("YaGottaTry_1.gif");
+    BufferedImage sheet = Helpers.readImage("YaGottaTry_2.gif");
     if (sheet != null) {
       try {
         StaffLineFinder lineFinder = new StaffLineFinder(sheet);
+        
+        lineFinder.getConnectedHistogram(0.25);
+        
         int[] histogram = lineFinder.getVerticalHistogram();
         Helpers.histogramToCsv(histogram, "histogram1.csv");
         int[] maxima = lineFinder.findMaxima(histogram);
