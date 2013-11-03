@@ -11,23 +11,19 @@ import java.util.SortedSet;
 public class StaffLineFinder {
 
   private BufferedImage image;
+  
+  public static int foregroundColor = 0xFF000000;
+  public static int backgroundColor = 0xFFFFFFFF;
 
   public StaffLineFinder(BufferedImage image) throws NotGrayscaleException {
     OtsuRunner thresholder = new OtsuRunner(image);
     this.image = Helpers.createBinaryImage(image, thresholder.getThreshold());
-    for(int i = 0, height = this.image.getHeight(); i < height; i++) {
-      for(int j = 0, width = this.image.getWidth(); j < width; j++) {
-        if(this.image.getRGB(j, i) != 0xFF000000 && this.image.getRGB(j, i) != 0xFFFFFFFF) {
-          System.out.format("%x\n", this.image.getRGB(j, i));
-        }
-      }
-    }
     Helpers.writeGifImage(this.image, "binary.gif");
   }
   
   public void getConnectedHistogram(double widthPercent) {
     ConnectedComponentFinder finder = new ConnectedComponentFinder();
-    finder.findConnectedComponents(this.image, 0xFF000000);
+    finder.findConnectedComponents(this.image, foregroundColor);
     Helpers.labelsToCsv(finder.getLabels(), "labels.csv");
     double widthThreshold = this.image.getWidth() * widthPercent;
     Map<Integer, SortedSet<Point<Object>>> labels = finder.getLabelPoints();
@@ -46,17 +42,21 @@ public class StaffLineFinder {
     BufferedImage modified = new BufferedImage(this.image.getWidth(), this.image.getHeight(), BufferedImage.TYPE_INT_RGB);
     for(int i = 0, height = this.image.getHeight(); i < height; i++) {
       for(int j = 0, width = this.image.getWidth(); j < width; j++) {
-        modified.setRGB(j, i, 0xFFFFFF);
+        modified.setRGB(j, i, backgroundColor);
       }
     }
     
     for(Integer label : labels.keySet()) {
       SortedSet<Point<Object>> labelPoints = labels.get(label);
       for(Point<Object> point : labelPoints) {
-        modified.setRGB((int) point.getX(), (int) point.getY(), 0x000000);
+        modified.setRGB((int) point.getX(), (int) point.getY(), foregroundColor);
       }
     }
     Helpers.writeGifImage(modified, "test.gif");
+    BufferedImage closed = Morph.closing(1, modified, foregroundColor, backgroundColor, Runtime.getRuntime().availableProcessors());
+    Helpers.writeGifImage(closed, "closed.gif");
+    BufferedImage extended = Morph.extend(closed, foregroundColor, Runtime.getRuntime().availableProcessors());
+    Helpers.writeGifImage(extended, "extended.gif");
   }
 
   public int[] getVerticalHistogram() {
