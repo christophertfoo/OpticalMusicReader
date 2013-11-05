@@ -4,7 +4,7 @@ import java.awt.image.BufferedImage;
 
 public class Driver {
   public static void main(String[] args) {
-    BufferedImage sheet = Helpers.readImage("YaGottaTry_2.gif");
+    BufferedImage sheet = Helpers.readImage("YaGottaTry_1.gif");
     if (sheet != null) {
       try {
         StaffLineFinder lineFinder = new StaffLineFinder(sheet);

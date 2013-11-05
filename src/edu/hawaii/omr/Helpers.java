@@ -7,6 +7,7 @@ import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import javax.imageio.ImageIO;
 
@@ -199,5 +200,23 @@ public class Helpers {
     catch (IOException e) {
       System.err.println(e.getMessage());
     }
+  }
+  
+  public static float getStdDev(List<Integer> values) {
+    float stdDev = 0;
+    float average = 0;
+    for(int value : values) {
+      average += value;
+    }
+    average /= (float) values.size();
+    
+    for(int value : values) {
+      stdDev += Math.pow(value - average, 2);
+    }
+    stdDev /= (float) values.size();
+   
+    stdDev = (float) Math.sqrt(stdDev);
+    
+    return stdDev;
   }
 }

@@ -1,5 +1,7 @@
 package edu.hawaii.omr;
 
+import java.util.Comparator;
+
 /**
  * A point in a 2D Cartesian Coordinate system.
  * 
@@ -120,5 +122,52 @@ public class Point<E> {
   public boolean equals(Object otherPoint) {
     return otherPoint == null || !(otherPoint instanceof Point<?>) ? false
         : this.x == ((Point<?>) otherPoint).x && this.y == ((Point<?>) otherPoint).y;
+  }
+}
+
+/**
+ * Compares the x values of two {@link Point}s.
+ * 
+ * @author Christopher Foo
+ * 
+ * @param <E>
+ *          The type of data stored at that Point (i.e. f(x, y)).
+ */
+class XComparator<E> implements Comparator<Point<E>> {
+
+  @Override
+  public int compare(Point<E> o1, Point<E> o2) {
+    int returnCode;
+    if (o1 == null && o2 != null) {
+      returnCode = 1;
+    }
+    else if (o2 == null && o1 != null) {
+      returnCode = -1;
+    }
+    else if (o1 == null && o2 == null) {
+      returnCode = 0;
+    }
+    else {
+      long x1 = o1.getX();
+      long x2 = o2.getX();
+      long y1 = o1.getY();
+      long y2 = o2.getY();
+      if (x1 < x2) {
+        returnCode = -1;
+      }
+      else if (x1 > x2) {
+        returnCode = 1;
+      }
+      else if(y1 < y2){
+        returnCode = -1;
+      }
+      else if(y1 > y2) {
+        returnCode = 1;
+      }
+      else {
+        returnCode = 0;
+      }
+    }
+    return returnCode;
   }
 }
