@@ -105,6 +105,20 @@ public class StaffLineFinder {
     }
     return thresholded;
   }
+  
+  public int[] reverseThresholdHistogram(int[] histogram, double percentage) {
+    int[] thresholded = histogram.clone();
+    double threshold = percentage * this.maxValue(histogram);
+    for (int i = 0, length = histogram.length; i < length; i++) {
+      if (histogram[i] < threshold) {
+        thresholded[i] = histogram[i];
+      }
+      else {
+        thresholded[i] = 0;
+      }
+    }
+    return thresholded;
+  }
 
   public int[] findMaxima(int[] histogram) {
     Map<Integer, Integer> map = new HashMap<>();
