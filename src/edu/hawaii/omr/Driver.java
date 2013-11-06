@@ -18,6 +18,12 @@ public class Driver {
         
         int[] maximaThresh = lineFinder.findMaxima(thresholded);
         Helpers.histogramToCsv(maximaThresh, "maxThres1.csv");
+        
+    
+        int lineSize = lineFinder.findLineSize(thresholded);
+        int[][] test = lineFinder.staffLineRemoval(maximaThresh,thresholded,lineSize);
+        Helpers.writeGifImage(ImageMaker.getBufferedImage(test), "test3.gif");
+        
       }
       catch (NotGrayscaleException e) {
         System.out.println("Error: Image is not grayscale!");
