@@ -10,12 +10,154 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import javax.imageio.ImageIO;
+import org.opencv.core.Mat;
 
 public class Helpers {
   private Helpers() {
     // Private constructor
   }
-  
+
+  public static Mat inverseMat(Mat original) {
+    Mat inverted = original.clone();
+    int numChannels = inverted.channels();
+
+    for (int y = 0, height = inverted.rows(); y < height; y++) {
+      for (int x = 0, width = inverted.width(); x < width; x++) {
+        double[] values = inverted.get(y, x);
+        for (int i = 0; i < numChannels; i++) {
+          values[i] = 255 - values[i];
+        }
+        inverted.put(y, x, values);
+      }
+    }
+
+    return inverted;
+  }
+
+  public static Mat extendLines(Mat lineMat, int endX) {
+    return Helpers.extendLines(lineMat, 0, endX);
+  }
+
+  public static Mat extendLines(Mat lineMat, int startX, int endX) {
+    Mat extended = lineMat.clone();
+    int[] points = new int[4];
+    for (int i = 0, numLines = (int) lineMat.size().width; i < numLines; i++) {
+      lineMat.get(0, i, points);
+      int x0 = points[0];
+      int y0 = points[1];
+      int x1 = points[2];
+      int y1 = points[3];
+
+      LineEquation currentLine = new LineEquation(x0, y0, x1, y1);
+      int[] newPoints = new int[4];
+      newPoints[0] = startX;
+      newPoints[1] = (int) Math.round(currentLine.calculateY(startX));
+      newPoints[2] = endX;
+      newPoints[3] = (int) Math.round(currentLine.calculateY(endX));
+      extended.put(0, i, newPoints);
+    }
+    return extended;
+  }
+
+  public static Mat subtractMat(Mat first, Mat second) {
+    Mat difference = first.clone();
+
+    int numChannels = difference.channels();
+
+    double[] newValues = new double[numChannels];
+    for (int i = 0; i < numChannels; i++) {
+      newValues[i] = 0;
+    }
+
+    for (int y = 0, height = difference.rows(); y < height; y++) {
+      for (int x = 0, width = difference.width(); x < width; x++) {
+        double[] firstValues = difference.get(y, x);
+        double[] secondValues = second.get(y, x);
+
+        boolean isMatch = true;
+        for (int i = 0; i < numChannels; i++) {
+          if (Double.compare(firstValues[i], secondValues[i]) != 0) {
+            isMatch = false;
+            break;
+          }
+        }
+        if (isMatch) {
+          difference.put(y, x, newValues);
+        }
+      }
+    }
+
+    return difference;
+  }
+
+  public static Mat subtractMatPreserve(Mat first, Mat second, boolean eightWay) {
+    Mat difference = first.clone();
+
+    int numChannels = difference.channels();
+
+    double[] newValues = new double[numChannels];
+    for (int i = 0; i < numChannels; i++) {
+      newValues[i] = 0;
+    }
+
+    for (int y = 0, height = difference.rows(); y < height; y++) {
+      for (int x = 0, width = difference.width(); x < width; x++) {
+        double[] firstValues = difference.get(y, x);
+        double[] secondValues = second.get(y, x);
+
+        boolean isMatch = true;
+        for (int i = 0; i < numChannels; i++) {
+          if (Double.compare(firstValues[i], secondValues[i]) != 0) {
+            isMatch = false;
+            break;
+          }
+        }
+        if (isMatch) {
+          int yOffset = 0;
+          boolean preserve = false;
+          while (y + yOffset < second.rows() - 1 && second.get(y + yOffset, x)[0] == 255) {
+            yOffset++;
+          }
+          if (first.get(y + yOffset, x)[0] == 255) {
+            preserve = true;
+          }
+          else if(eightWay && yOffset > 0) {
+            if(x > 0 && first.get(y + yOffset, x - 1)[0] == 255) {
+              preserve = true;
+            }
+            else if(x < first.cols() - 1 && first.get(y + yOffset, x + 1)[0] == 255) {
+              preserve = true;
+            }
+          }
+
+          if (!preserve) {
+            yOffset = 0;
+            while (y + yOffset > 0 && second.get(y + yOffset, x)[0] == 255) {
+              yOffset--;
+            }
+            if (first.get(y + yOffset, x)[0] == 255) {
+              preserve = true;
+            }
+            else if(eightWay && yOffset < 0) {
+              if(x > 0 && first.get(y + yOffset, x - 1)[0] == 255) {
+                preserve = true;
+              }
+              else if(x < first.cols() - 1 && first.get(y + yOffset, x + 1)[0] == 255) {
+                preserve = true;
+              }
+            }
+          }
+          if (!preserve) {
+            difference.put(y, x, newValues);
+          }
+        }
+      }
+    }
+    return difference;
+  }
+
+  // TODO: The ones below are probably junk and will be deleted later
+
   /**
    * Reads and returns the image at the given path or returns null and prints an error message if a
    * problem occurs.
@@ -69,7 +211,7 @@ public class Helpers {
       }
     }
   }
-  
+
   /**
    * Makes a copy of the given image.
    * 
@@ -84,13 +226,15 @@ public class Helpers {
     BufferedImage copy = new BufferedImage(cm, raster, isAlphaPremultiplied, null);
     return copy;
   }
-  
+
   /**
    * Creates a binary copy of the given image using the given threshold. Values that equal the
    * threshold are considered to be black.
    * 
-   * @param image The {@link BufferedImage} to be thresholded.
-   * @param threshold The threshold that will be used to create the binary image.
+   * @param image
+   *          The {@link BufferedImage} to be thresholded.
+   * @param threshold
+   *          The threshold that will be used to create the binary image.
    * @return A binary copy of the image.
    */
   public static BufferedImage createBinaryImage(BufferedImage image, int threshold) {
@@ -108,11 +252,12 @@ public class Helpers {
     }
     return copy;
   }
-  
+
   /**
    * Determines if the given image is a grayscale image.
    * 
-   * @param image The {@link BufferedImage} to be checked.
+   * @param image
+   *          The {@link BufferedImage} to be checked.
    * @return true if the image is grayscale, false otherwise.
    */
   public static boolean isGrayscale(BufferedImage image) {
@@ -133,7 +278,7 @@ public class Helpers {
     }
     return grayscale;
   }
-    
+
   public static void histogramToCsv(int[] histogram, String csvName) {
     try {
       FileWriter writer = new FileWriter(new File(csvName));
@@ -146,7 +291,7 @@ public class Helpers {
       System.err.println(e.getMessage());
     }
   }
-  
+
   public static void histogramToCsv(Map<Integer, Integer> histogram, String csvName) {
     try {
       FileWriter writer = new FileWriter(new File(csvName));
@@ -159,7 +304,7 @@ public class Helpers {
       System.err.println(e.getMessage());
     }
   }
-  
+
   public static void histogramToCsv(double[] histogram, String csvName) {
     try {
       FileWriter writer = new FileWriter(new File(csvName));
@@ -172,7 +317,7 @@ public class Helpers {
       System.err.println(e.getMessage());
     }
   }
-  
+
   /**
    * Writes the given 2D int array to a CSV file at the given path.
    * 
@@ -201,22 +346,22 @@ public class Helpers {
       System.err.println(e.getMessage());
     }
   }
-  
+
   public static float getStdDev(List<Integer> values) {
     float stdDev = 0;
     float average = 0;
-    for(int value : values) {
+    for (int value : values) {
       average += value;
     }
     average /= (float) values.size();
-    
-    for(int value : values) {
+
+    for (int value : values) {
       stdDev += Math.pow(value - average, 2);
     }
     stdDev /= (float) values.size();
-   
+
     stdDev = (float) Math.sqrt(stdDev);
-    
+
     return stdDev;
   }
 }

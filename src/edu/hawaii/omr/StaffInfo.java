@@ -35,7 +35,6 @@ public class StaffInfo {
     for(int key : frequencyMap.keySet()) {
       array[key] = frequencyMap.get(key);
     }
-    Helpers.histogramToCsv(array, "distances.csv");
     return this.getMode(frequencyMap);
   }
   
@@ -56,7 +55,6 @@ public class StaffInfo {
     for(int key : frequencyMap.keySet()) {
       array[key] = frequencyMap.get(key);
     }
-    Helpers.histogramToCsv(array, "heights.csv");
     return this.getMode(frequencyMap);
   }
   

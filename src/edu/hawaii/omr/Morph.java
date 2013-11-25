@@ -87,6 +87,21 @@ public class Morph {
   
   public static BufferedImage subtract(BufferedImage first, BufferedImage second, int foregroundColor, int backgroundColor, int numThreads) {
     BufferedImage result = Helpers.copyImage(first);
+    ExecutorService pool = Executors.newFixedThreadPool(numThreads);
+    for (int y = 0, height = result.getHeight(); y < height; y++) {
+      pool.submit(new SubtracterRunnable(y, result, second, foregroundColor, backgroundColor));
+    }
+
+    pool.shutdown();
+    boolean stopped = true;
+    while (stopped) {
+      try {
+        stopped = !pool.awaitTermination(60, TimeUnit.SECONDS);
+      }
+      catch (InterruptedException e) {
+        // Do nothing...
+      }
+    }
     return result;
   }
 }
@@ -222,4 +237,50 @@ class ExtenderRunnable implements Runnable {
       }
     }
   }
+}
+
+class SubtracterRunnable implements Runnable {
+  
+  private int row;
+  private BufferedImage first, second;
+  private int foregroundColor, backgroundColor;
+
+  public SubtracterRunnable(int row, BufferedImage first, BufferedImage second, int foregroundColor, int backgroundColor) {
+    this.row = row;
+    this.first = first;
+    this.second = second;
+    this.foregroundColor = foregroundColor;
+    this.backgroundColor = backgroundColor;
+  }
+  
+  @Override
+  public void run() {
+    for(int x = 0, width = first.getWidth(); x < width; x++) {
+      if(first.getRGB(x, row) == this.foregroundColor && second.getRGB(x, row) == this.foregroundColor) {
+        int yOffset = 1;
+        boolean pixelAbove = false;
+        boolean pixelBelow = false;
+        while(row + yOffset < second.getHeight() && second.getRGB(x, row + yOffset) == this.foregroundColor) {
+          yOffset++;
+        }
+        if(first.getRGB(x, row + yOffset) == this.foregroundColor) {
+          pixelAbove = true;
+        }
+        
+        yOffset = -1;
+        while(row + yOffset > 0 && second.getRGB(x, row + yOffset) == this.foregroundColor) {
+          yOffset--;
+        }
+        if(first.getRGB(x, row + yOffset) == this.foregroundColor) {
+          pixelBelow = true;
+        }
+        
+        if(!pixelAbove && !pixelBelow)  {
+          first.setRGB(x, row, this.backgroundColor);
+        }
+      }
+    }
+    
+  }
+  
 }

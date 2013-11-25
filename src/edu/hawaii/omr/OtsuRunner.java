@@ -168,7 +168,7 @@ public class OtsuRunner {
         maxBetweenGroupVariance = betweenGroupVariance;
       }
     }
-    return threshold;
+    return threshold == 0 ? 1 : threshold;
   }
 
 }

@@ -24,4 +24,12 @@ public class Range {
     }
     return values;
   }
+  
+  public void setLowerBound(int newValue) {
+    this.lowerBound = newValue;
+  }
+  
+  public void setUpperBound(int newValue) {
+    this.upperBound = newValue;
+  }
 }
