@@ -1,5 +1,10 @@
 package edu.hawaii.omr;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.highgui.Highgui;
@@ -40,16 +45,22 @@ public class ImageMatrix extends Mat {
   }
 
   public ImageMatrix invert() {
-    int numChannels = this.channels();
-
+    ExecutorService threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    this.invert(threadPool);
+    threadPool.shutdown();
+    return this;
+  }
+  
+  public ImageMatrix invert(ExecutorService threadPool) {
+    List<Callable<Void>> invertCallables = new ArrayList<>();
     for (int y = 0, height = this.rows(); y < height; y++) {
-      for (int x = 0, width = this.width(); x < width; x++) {
-        double[] values = this.get(y, x);
-        for (int i = 0; i < numChannels; i++) {
-          values[i] = 255 - values[i];
-        }
-        this.put(y, x, values);
-      }
+      invertCallables.add(new InvertCallable(this, y));
+    }
+    try {
+      threadPool.invokeAll(invertCallables);
+    }
+    catch (InterruptedException e) {
+      // Do nothing...
     }
     return this;
   }
@@ -84,7 +95,7 @@ public class ImageMatrix extends Mat {
         }
       }
     }
-
+    difference.writeImage("diffTest.png");
     return difference;
   }
 
@@ -176,12 +187,37 @@ public class ImageMatrix extends Mat {
     return difference;
   }
 
-  public void write(String filePath) {
+  public void writeImage(String filePath) {
     Highgui.imwrite(filePath, this);
   }
 
   public static ImageMatrix readImage(String filePath, int flags) {
     Mat matrix = Highgui.imread(filePath, flags);
     return new ImageMatrix(matrix);
+  }
+  
+  private class InvertCallable implements Callable<Void> {
+    
+    private ImageMatrix matrix;
+    private final int y;
+    
+    public InvertCallable(ImageMatrix matrix, int y) {
+      this.matrix = matrix;
+      this.y = y;
+    }
+
+    @Override
+    public Void call() throws Exception {
+      int numChannels = this.matrix.channels();
+      for (int x = 0, width = this.matrix.width(); x < width; x++) {
+        double[] values = this.matrix.get(this.y, x);
+        for (int i = 0; i < numChannels; i++) {
+          values[i] = 255 - values[i];
+        }
+        this.matrix.put(this.y, x, values);
+      }
+      return null;
+    }
+    
   }
 }
