@@ -151,7 +151,7 @@ public class ConnectedComponentFinder {
    * 
    * @return The number of labels in the labels data structure.
    */
-  private int countLabels() {
+  public int countLabels() {
     Map<Integer, Integer> found = new HashMap<>();
 
     for (int i = 0; i < this.labels.length; i++) {

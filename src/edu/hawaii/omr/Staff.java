@@ -1,5 +1,7 @@
 package edu.hawaii.omr;
 
+import java.util.Comparator;
+
 public class Staff {
   private StaffLine[] lines;
 
@@ -8,6 +10,13 @@ public class Staff {
   private int topBound;
   private int bottomBound;
 
+  public Staff(int topBound, int bottomBound, int leftBound, int rightBound) {
+    this.topBound = topBound;
+    this.bottomBound = bottomBound;
+    this.leftBound = leftBound;
+    this.rightBound = rightBound;
+  }
+  
   public Staff(StaffLine line1, StaffLine line2, StaffLine line3, StaffLine line4, StaffLine line5) {
     this.lines = new StaffLine[5];
     this.lines[0] = line1;
@@ -32,6 +41,12 @@ public class Staff {
       line.addToImage(image);
     }
   }
+  
+  public void addToImage(ImageMatrix image, StaffInfo info) {
+    for (StaffLine line : this.lines) {
+      line.addToImage(image, info);
+    }
+  }
 
   public StaffLine contains(Point point) {
     int x = point.getX();
@@ -52,6 +67,19 @@ public class Staff {
       adjacent = adjacent && this.lines[i].adjacentTo(other.lines[i]);
     }
     return adjacent;
+  }
+  
+  public int getTopBound() {
+    return this.topBound;
+  }
+  public int getBottomBound() {
+    return this.bottomBound;
+  }
+  public int getLeftBound() {
+    return this.leftBound;
+  }
+  public int getRightBound() {
+    return this.rightBound;
   }
 
   private void setBounds() {
@@ -95,5 +123,32 @@ public class Staff {
     this.bottomBound =
         last.getLeftEdgeBottomY() > last.getRightEdgeBottomY() ? last.getLeftEdgeBottomY() : last
             .getRightEdgeBottomY();
+  }
+  
+  public static class TopComparator implements Comparator<Staff> {
+
+    @Override
+    public int compare(Staff o1, Staff o2) {
+      
+      // Compare top boundaries first
+      int difference = o1.topBound - o2.topBound;
+      if(difference != 0) {
+        return difference;
+      }
+      // Compare bottom boundaries second
+      difference = o1.bottomBound - o2.bottomBound;
+      if(difference != 0) {
+        return difference;
+      }
+      // Compare left boundaries third
+      difference = o1.leftBound - o2.leftBound;
+      if(difference != 0) {
+        return difference;
+      }
+      // Compare right boundaries last
+      difference = o1.rightBound - o2.rightBound;
+      return difference;
+    }
+    
   }
 }

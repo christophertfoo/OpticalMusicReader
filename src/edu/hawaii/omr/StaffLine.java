@@ -4,11 +4,14 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import org.opencv.core.Core;
+import org.opencv.core.Scalar;
 
 public class StaffLine {
 
   private static final Point.XComparator xComparator = new Point.XComparator();
   private static final Point.YComparator yComparator = new Point.YComparator();
+  private static final int lineHeightAdjustment = 1;
 
   private SortedSet<Point> points;
   private SortedMap<Integer, SortedSet<Point>> rows;
@@ -40,11 +43,11 @@ public class StaffLine {
     this.points.add(point);
     this.rows.get(y).add(point);
     this.columns.get(x).add(point);
-
+    
     this.leftEdgeX = -1;
     this.leftEdgeTopY = -1;
     this.leftEdgeBottomY = -1;
-    
+
     this.rightEdgeX = -1;
     this.rightEdgeTopY = -1;
     this.rightEdgeBottomY = -1;
@@ -56,16 +59,16 @@ public class StaffLine {
     }
     return this.leftEdgeX;
   }
-  
+
   public int getLeftEdgeTopY() {
-    if(this.leftEdgeTopY == -1) {
+    if (this.leftEdgeTopY == -1) {
       this.leftEdgeTopY = this.columns.get(this.getLeftEdgeX()).first().getY();
     }
     return this.leftEdgeTopY;
   }
-  
+
   public int getLeftEdgeBottomY() {
-    if(this.leftEdgeBottomY == -1) {
+    if (this.leftEdgeBottomY == -1) {
       this.leftEdgeBottomY = this.columns.get(this.getLeftEdgeX()).last().getY();
     }
     return this.leftEdgeBottomY;
@@ -77,32 +80,58 @@ public class StaffLine {
     }
     return this.rightEdgeX;
   }
-  
+
   public int getRightEdgeTopY() {
-    if(this.rightEdgeTopY == -1) {
+    if (this.rightEdgeTopY == -1) {
       this.rightEdgeTopY = this.columns.get(this.getRightEdgeX()).first().getY();
     }
     return this.rightEdgeTopY;
   }
-  
+
   public int getRightEdgeBottomY() {
-    if(this.rightEdgeBottomY == -1) {
+    if (this.rightEdgeBottomY == -1) {
       this.rightEdgeBottomY = this.columns.get(this.getRightEdgeX()).last().getY();
     }
     return this.rightEdgeBottomY;
   }
 
   public void addStaffLine(StaffLine line) {
-    for (int y : line.rows.keySet()) {
-      for (Point point : line.rows.get(y)) {
-        this.addPoint(point);
-      }
+    for (Point point : line.points) {
+      this.addPoint(point);
     }
   }
 
   public void addToImage(ImageMatrix image) {
-    for (Point point : this.points) {
-      image.put((int) point.getY(), (int) point.getX(), 255);
+    double middleLeft = (this.getLeftEdgeBottomY() + this.getLeftEdgeTopY()) / 2.0;
+    int leftX = this.getLeftEdgeX();
+    double middleRight = (this.getRightEdgeBottomY() + this.getRightEdgeTopY()) / 2.0;
+    int rightX = this.getRightEdgeX();
+    int height = this.rows.lastKey() - this.rows.firstKey();
+    if (leftX == rightX) {
+      for(Point point : this.points) {
+        image.put(point.getY(), point.getX(), 255);
+      }
+    }
+    else {
+      Core.line(image, new org.opencv.core.Point(leftX, middleLeft), new org.opencv.core.Point(
+          rightX, middleRight), new Scalar(255), height);
+    }
+  }
+  
+  public void addToImage(ImageMatrix image, StaffInfo info) {
+    double middleLeft = (this.getLeftEdgeBottomY() + this.getLeftEdgeTopY()) / 2.0;
+    int leftX = this.getLeftEdgeX();
+    double middleRight = (this.getRightEdgeBottomY() + this.getRightEdgeTopY()) / 2.0;
+    int rightX = this.getRightEdgeX();
+    int height = info.getModeRangeHeight(0.33).getUpperBound() + lineHeightAdjustment;
+    if (leftX == rightX) {
+      for(Point point : this.points) {
+        image.put(point.getY(), point.getX(), 255);
+      }
+    }
+    else {
+      Core.line(image, new org.opencv.core.Point(leftX, middleLeft), new org.opencv.core.Point(
+          rightX, middleRight), new Scalar(255), height);
     }
   }
 
