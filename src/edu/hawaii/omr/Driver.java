@@ -40,6 +40,9 @@ public class Driver {
     MeasureDetection measureMat = new MeasureDetection(Highgui.imread("diff4.png", Highgui.CV_LOAD_IMAGE_GRAYSCALE));
     measureMat.setStaffLineHeight(lineImage);
     measureMat.detectMeasure();
+    
+   // NoteHead noteheadtest = new NoteHead(19);
+    //noteheadtest.findNotes(lineImage);
   }
 
 }
