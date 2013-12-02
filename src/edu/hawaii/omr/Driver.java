@@ -2,6 +2,9 @@ package edu.hawaii.omr;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
@@ -28,11 +31,15 @@ public class Driver {
     
     // Convert the lines into an image
     ImageMatrix lineImage = lines.toImageMatrix(image);
-    
+      
     // Perform subtractions
     image.subtractImage(lineImage).invert().write("diff.png");
     image.subtractImagePreserve(lineImage, false).invert().write("diff4.png");
     image.subtractImagePreserve(lineImage, true).invert().write("diff8.png");
+    
+    MeasureDetection measureMat = new MeasureDetection(Highgui.imread("diff4.png", Highgui.CV_LOAD_IMAGE_GRAYSCALE));
+    measureMat.setStaffLineHeight(lineImage);
+    measureMat.detectMeasure();
   }
 
 }
