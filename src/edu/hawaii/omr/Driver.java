@@ -15,6 +15,7 @@ public class Driver {
   public static void main(String[] args) {
 
     try {
+      System.out.println("Press enter to go on...");
       System.in.read();
     }
     catch (IOException e) {
@@ -23,43 +24,33 @@ public class Driver {
     }
     System.out.println("Going on...");
     SheetMusicMatrix image =
-        SheetMusicMatrix.readImage("Acha_1.bmp", Highgui.CV_LOAD_IMAGE_GRAYSCALE);
-//    LineMatrix lines = new LineMatrix(image.rows(), image.cols(), CvType.CV_8UC1);
+        SheetMusicMatrix.readImage("YaGottaTry_1.png", Highgui.CV_LOAD_IMAGE_GRAYSCALE);
 
     // Do some image clean up
     image.makeBinary();
     image.invert();
     image.close(Imgproc.MORPH_RECT, 3, 3);
-    image.writeImage("fixed.png");
-//
-//    // Find the lines
-//    Imgproc.HoughLinesP(image, lines, 1, Math.PI / 90, 10, image.cols() / 5.0, 10);
-//
-//    // Extend the lines
-//    lines.extendLines(image.cols() - 1);
-//
-//    // Convert the lines into an image
-//    ImageMatrix lineImage = lines.toImageMatrix(image);
-//    lineImage.writeImage("lines.png");
-//
-//    // Perform subtractions
-//    image.subtractImage(lineImage).invert().writeImage("diff.png");
-//    image.subtractImagePreserve(lineImage, false).invert().writeImage("diff4.png");
-//    image.subtractImagePreserve(lineImage, true).invert().writeImage("diff8.png");
 
      StaffInfo info = image.getStaffInfo();
      ImageMatrix testLines = image.findStaffLines(info);
-     testLines.writeImage("test-lines.png");
+     testLines.writeImage("lines.png");
      
      ConnectedComponentFinder finder = new ConnectedComponentFinder();
      finder.findConnectedComponents(testLines, 255);
      Map<Integer, SortedSet<Point>> labelMap = finder.makeLabelMap();
      image.mergeConnectedStaffs(labelMap);
-     image.getStaffLineImage().writeImage("merged.png");
+     image.getStaffLineImage().writeImage("merged-connected.png");
      image.mergeSeparatedStaffs();
      ImageMatrix mergedLines = image.getStaffLineImage();
-     mergedLines.writeImage("lines.png");
-     image.subtractImage(mergedLines).invert().writeImage("heuristic-sub.png");
+     mergedLines.writeImage("merged.png");
+
      image.subtractImagePreserve(mergedLines, false).invert().writeImage("heuristic.png");
+     image.subtractImagePreserve(mergedLines, true).invert().writeImage("heuristic-8.png");
+     
+     ImageMatrix[] split = image.splitImage();
+     for(int i = 0, numSplit = split.length; i < numSplit; i++) {
+       split[i].writeImage("split_" + i + ".png");
+     }
+
   }
 }

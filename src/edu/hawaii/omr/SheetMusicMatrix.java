@@ -13,14 +13,20 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.highgui.Highgui;
 
 public class SheetMusicMatrix extends ImageMatrix {
 
   private static final double modeThreshold = 0.33;
-  private static Staff.TopComparator staffComparator = new Staff.TopComparator();
+  private static final double staffWidthThreshold = 0.5;
+
+  private static final Staff.TopComparator staffComparator = new Staff.TopComparator();
+  private static final Staff.BottomComparator bottomComparator = new Staff.BottomComparator();
+  private final int minStaffWidth;
   private SortedSet<Staff> staffs;
+  private SortedSet<Staff> bottomStaffs;
   private StaffInfo info;
 
   public SheetMusicMatrix(Mat matrix) {
@@ -31,6 +37,8 @@ public class SheetMusicMatrix extends ImageMatrix {
   public SheetMusicMatrix(int rows, int cols, int type) {
     super(rows, cols, type);
     this.staffs = new TreeSet<>(staffComparator);
+    this.bottomStaffs = new TreeSet<>(bottomComparator);
+    this.minStaffWidth = (int) Math.round(cols * staffWidthThreshold);
   }
 
   public StaffInfo getStaffInfo() {
@@ -179,6 +187,7 @@ public class SheetMusicMatrix extends ImageMatrix {
 
             Staff staff = new Staff(line1, line2, line3, line4, line5);
             this.staffs.add(staff);
+            this.bottomStaffs.add(staff);
             staff.addToImage(lines);
           }
         }
@@ -233,20 +242,23 @@ public class SheetMusicMatrix extends ImageMatrix {
     for (SortedSet<Point> component : labelMap.values()) {
       this.associateComponent(component, matched);
     }
-    this.staffs = new TreeSet<>(staffComparator);
+    this.staffs.clear();
     this.staffs.addAll(matched);
+    this.bottomStaffs.clear();
+    this.bottomStaffs.addAll(matched);
   }
 
   private boolean associateComponent(SortedSet<Point> component, Set<Staff> matched) {
     boolean found = false;
     Point topLeft = component.first();
-    for (Staff staff : this.staffs) {// this.staffs.headSet(new Staff(topLeft.getY() + 1,
-                                     // Integer.MAX_VALUE, 0, 0))) {
+    for (Staff staff : this.staffs) {
       StaffLine line = staff.contains(topLeft);
       if (line != null) {
         for (Point point : component) {
           line.addPoint(point);
         }
+        // I don't like this... find better way...
+        staff.setBounds();
         matched.add(staff);
         found = true;
       }
@@ -257,25 +269,84 @@ public class SheetMusicMatrix extends ImageMatrix {
   public void mergeSeparatedStaffs() {
     List<Staff> results = new ArrayList<>();
     List<Staff> checked = new ArrayList<>();
-    int margin = (int) Math.ceil(this.info.getModeRangeDistance(modeThreshold).getUpperBound() / 2.0);
+    int margin =
+        (int) Math.ceil(this.info.getModeRangeDistance(modeThreshold).getUpperBound() / 2.0);
     for (Staff staff : this.staffs) {
       if (!checked.contains(staff)) {
         int top = staff.getTopBound();
+        int bottom = staff.getBottomBound();
         Set<Staff> inRange =
-            this.staffs.subSet(new Staff(top - margin, 0, 0, 0), new Staff(top + margin + 1, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE));
+            new HashSet<Staff>(this.staffs.subSet(new Staff(top - margin, 0, 0, 0), new Staff(top
+                + margin + 1, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE)));
+        Set<Staff> bottomRange =
+            this.bottomStaffs.subSet(new Staff(0, bottom - margin, 0, 0), new Staff(
+                Integer.MAX_VALUE, bottom + margin + 1, Integer.MAX_VALUE, Integer.MAX_VALUE));
+        inRange.addAll(bottomRange);
+        inRange.removeAll(checked);
         Iterator<Staff> iterator = inRange.iterator();
         if (iterator.hasNext()) {
           Staff seed = iterator.next();
+          int horizontalCoverage = seed.getRightBound() - seed.getLeftBound() + 1;
           while (iterator.hasNext()) {
-            seed.addStaff(iterator.next());
+            Staff next = iterator.next();
+            horizontalCoverage += next.getRightBound() - next.getLeftBound() + 1;
+            seed.addStaff(next);
           }
-          results.add(seed);
+          if (horizontalCoverage >= minStaffWidth) {
+            results.add(seed);
+          }
         }
         checked.addAll(inRange);
       }
     }
     this.staffs.clear();
     this.staffs.addAll(results);
+    int i = 1;
+    for (Staff staff : this.staffs) {
+      ImageMatrix matrix = new ImageMatrix(this.rows(), this.cols(), this.type());
+      staff.addToImage(matrix, this.info);
+      matrix.writeImage("staff_" + i + ".png");
+      i++;
+    }
+  }
+
+  public ImageMatrix[] splitImage() {
+    int numStaffs = this.staffs.size();
+    ImageMatrix[] split = new ImageMatrix[numStaffs];
+    int[] splitPoints = new int[numStaffs - 1];
+    Iterator<Staff> iterator = this.staffs.iterator();
+    Staff previous = null;
+    int i = 0;
+    while (iterator.hasNext()) {
+      Staff next = iterator.next();
+      if (previous == null) {
+        previous = next;
+      }
+      else {
+        splitPoints[i] = (int) Math.round((next.getTopBound() + previous.getBottomBound()) / 2.0);
+        previous = next;
+        i++;
+      }
+    }
+
+    int numSplits = numStaffs - 1;
+    int endCol = this.cols() - 1;
+    for (i = 0; i < numSplits; i++) {
+      int startRow;
+      if (i == 0) {
+        startRow = 0;
+      }
+      else {
+        startRow = splitPoints[i - 1];
+      }
+      Core.line(this, new org.opencv.core.Point(0, splitPoints[i]),
+          new org.opencv.core.Point(this.cols() - 1, splitPoints[i]), new org.opencv.core.Scalar(
+              255));
+      split[i] = new ImageMatrix(this.submat(startRow, splitPoints[i], 0, endCol));
+    }
+    this.writeImage("splitTest.png");
+    split[i] = new ImageMatrix(this.submat(splitPoints[i - 1], this.rows() - 1, 0, endCol));
+    return split;
   }
 
   public static SheetMusicMatrix readImage(String filePath, int flags) {

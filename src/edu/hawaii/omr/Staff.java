@@ -82,7 +82,7 @@ public class Staff {
     return this.rightBound;
   }
 
-  private void setBounds() {
+  void setBounds() {
     this.setXBounds();
     this.setYBounds();
   }
@@ -137,6 +137,33 @@ public class Staff {
       }
       // Compare bottom boundaries second
       difference = o1.bottomBound - o2.bottomBound;
+      if(difference != 0) {
+        return difference;
+      }
+      // Compare left boundaries third
+      difference = o1.leftBound - o2.leftBound;
+      if(difference != 0) {
+        return difference;
+      }
+      // Compare right boundaries last
+      difference = o1.rightBound - o2.rightBound;
+      return difference;
+    }
+    
+  }
+  
+  public static class BottomComparator implements Comparator<Staff> {
+
+    @Override
+    public int compare(Staff o1, Staff o2) {
+      
+      // Compare bottom boundaries first
+      int difference = o1.bottomBound - o2.bottomBound;
+      if(difference != 0) {
+        return difference;
+      }
+      // Compare top boundaries second
+      difference = o1.topBound - o2.topBound;
       if(difference != 0) {
         return difference;
       }
