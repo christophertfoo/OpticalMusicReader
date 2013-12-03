@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.SortedSet;
 import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
@@ -50,6 +53,13 @@ public class Driver {
      ImageMatrix[] split = image.splitImage();
      for(int i = 0, numSplit = split.length; i < numSplit; i++) {
        split[i].writeImage("split_" + i + ".png");
+    
+    MeasureDetection measureMat = new MeasureDetection(Highgui.imread("diff4.png", Highgui.CV_LOAD_IMAGE_GRAYSCALE));
+    measureMat.setStaffLineHeight(lineImage);
+    measureMat.detectMeasure();
+    
+   // NoteHead noteheadtest = new NoteHead(19);
+    //noteheadtest.findNotes(lineImage);
      }
 
   }
