@@ -6,91 +6,120 @@ import java.util.List;
 import java.util.Map;
 
 public class StaffInfo {
-  private List<Integer> distances;
-  private List<Integer> heights;
+  private List<Integer> lineDistances;
+  private List<Integer> lineHeights;
+  private List<Integer> staffHeights;
 
-  private Map<Integer, Integer> distanceFreq;
-  private Map<Integer, Integer> heightFreq;
+  private Map<Integer, Integer> lineDistanceFreq;
+  private Map<Integer, Integer> lineHeightFreq;
+  private Map<Integer, Integer> staffHeightFreq;
 
-  private int distanceMode;
-  private int heightMode;
+  private int lineDistanceMode;
+  private int lineHeightMode;
+  private int staffHeightMode;
 
-  private Map<Double, Range> distanceRanges;
-  private Map<Double, Range> heightRanges;
+  private Map<Double, Range> lineDistanceRanges;
+  private Map<Double, Range> lineHeightRanges;
 
   public StaffInfo() {
-    this.distances = new ArrayList<>();
-    this.heights = new ArrayList<>();
-    this.distanceFreq = null;
-    this.heightFreq = null;
-    this.distanceMode = -1;
-    this.heightMode = -1;
-    this.distanceRanges = new HashMap<>();
-    this.heightRanges = new HashMap<>();
+    this.lineDistances = new ArrayList<>();
+    this.lineHeights = new ArrayList<>();
+    this.staffHeights = new ArrayList<>();
+
+    this.lineDistanceFreq = null;
+    this.lineHeightFreq = null;
+    this.staffHeightFreq = null;
+
+    this.lineDistanceMode = -1;
+    this.lineHeightMode = -1;
+    this.staffHeightMode = -1;
+
+    this.lineDistanceRanges = new HashMap<>();
+    this.lineHeightRanges = new HashMap<>();
   }
 
-  public void addDistance(int distance) {
-    this.distances.add(distance);
-    this.distanceFreq = null;
-    this.distanceMode = -1;
-    this.distanceRanges.clear();
+  public void addLineDistance(int distance) {
+    this.lineDistances.add(distance);
+    this.lineDistanceFreq = null;
+    this.lineDistanceMode = -1;
+    this.lineDistanceRanges.clear();
   }
 
-  public void addHeight(int height) {
-    this.heights.add(height);
-    this.heightFreq = null;
-    this.heightMode = -1;
-    this.heightRanges.clear();
+  public void addLineHeight(int height) {
+    this.lineHeights.add(height);
+    this.lineHeightFreq = null;
+    this.lineHeightMode = -1;
+    this.lineHeightRanges.clear();
   }
 
-  public int getModeDistance() {
-    if (this.distanceMode == -1) {
-      if (this.distanceFreq == null) {
-        this.distanceFreq = this.getFrequencyMap(this.distances);
+  public void addStaffHeight(int height) {
+    this.staffHeights.add(height);
+    this.staffHeightFreq = null;
+    this.staffHeightMode = -1;
+  }
+
+  public int getModeLineDistance() {
+    if (this.lineDistanceMode == -1) {
+      if (this.lineDistanceFreq == null) {
+        this.lineDistanceFreq = this.getFrequencyMap(this.lineDistances);
       }
-      this.distanceMode = this.getMode(this.distanceFreq);
+      this.lineDistanceMode = this.getMode(this.lineDistanceFreq);
     }
-    return this.distanceMode;
+    return this.lineDistanceMode;
   }
 
-  public Range getModeRangeDistance(double thresholdPercent) {
-    if (!this.distanceRanges.containsKey(thresholdPercent)) {
-      if (this.distanceFreq == null) {
-        this.distanceFreq = this.getFrequencyMap(this.distances);
+  public Range getModeLineDistance(double thresholdPercent) {
+    if (!this.lineDistanceRanges.containsKey(thresholdPercent)) {
+      if (this.lineDistanceFreq == null) {
+        this.lineDistanceFreq = this.getFrequencyMap(this.lineDistances);
       }
-      this.distanceRanges.put(thresholdPercent,
-          this.getModeRange(this.distanceFreq, thresholdPercent));
+      this.lineDistanceRanges.put(thresholdPercent,
+          this.getModeRange(this.lineDistanceFreq, thresholdPercent));
     }
-    return this.distanceRanges.get(thresholdPercent);
+    return this.lineDistanceRanges.get(thresholdPercent);
   }
 
-  public int getModeHeight() {
-    if (this.heightMode == -1) {
-      if (this.heightFreq == null) {
-        this.heightFreq = this.getFrequencyMap(this.heights);
+  public int getModeLineHeight() {
+    if (this.lineHeightMode == -1) {
+      if (this.lineHeightFreq == null) {
+        this.lineHeightFreq = this.getFrequencyMap(this.lineHeights);
       }
-      this.heightMode = this.getMode(this.heightFreq);
+      this.lineHeightMode = this.getMode(this.lineHeightFreq);
     }
-    return this.heightMode;
+    return this.lineHeightMode;
   }
 
-  public Range getModeRangeHeight(double thresholdPercent) {
-    if (!this.heightRanges.containsKey(thresholdPercent)) {
-      if (this.heightFreq == null) {
-        this.heightFreq = this.getFrequencyMap(this.heights);
+  public Range getModeLineHeight(double thresholdPercent) {
+    if (!this.lineHeightRanges.containsKey(thresholdPercent)) {
+      if (this.lineHeightFreq == null) {
+        this.lineHeightFreq = this.getFrequencyMap(this.lineHeights);
       }
-      this.heightRanges.put(thresholdPercent,
-          this.getModeRange(this.heightFreq, thresholdPercent));
+      this.lineHeightRanges.put(thresholdPercent,
+          this.getModeRange(this.lineHeightFreq, thresholdPercent));
     }
-    return this.heightRanges.get(thresholdPercent);
+    return this.lineHeightRanges.get(thresholdPercent);
+  }
+
+  public int getModeStaffHeight() {
+    if(this.staffHeightMode == -1) {
+      if(this.staffHeightFreq == null) {
+        this.staffHeightFreq = this.getFrequencyMap(this.staffHeights);
+      }
+      this.staffHeightMode = this.getMode(this.staffHeightFreq);
+    }
+    return this.staffHeightMode;
   }
   
   public void addStaffInfo(StaffInfo info) {
-    for(int distance : info.distances) {
-      this.addDistance(distance);
+    for (int distance : info.lineDistances) {
+      this.addLineDistance(distance);
     }
-    for(int height : info.heights) {
-      this.addHeight(height);
+    for (int height : info.lineHeights) {
+      this.addLineHeight(height);
+    }
+    
+    for(int height : info.staffHeights) {
+      this.addStaffHeight(height);
     }
   }
 

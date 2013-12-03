@@ -13,7 +13,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.highgui.Highgui;
 
@@ -74,8 +73,8 @@ public class SheetMusicMatrix extends ImageMatrix {
 
   public ImageMatrix findStaffLines(StaffInfo info) {
     ImageMatrix lines = new ImageMatrix(this.rows(), this.cols(), this.type());
-    Range distanceRange = info.getModeRangeDistance(modeThreshold);
-    Range heightRange = info.getModeRangeHeight(modeThreshold);
+    Range distanceRange = info.getModeLineDistance(modeThreshold);
+    Range heightRange = info.getModeLineHeight(modeThreshold);
 
     heightRange.setLowerBound(heightRange.getLowerBound() - 1);
     distanceRange.setUpperBound(distanceRange.getUpperBound() + 1);
@@ -188,6 +187,7 @@ public class SheetMusicMatrix extends ImageMatrix {
             Staff staff = new Staff(line1, line2, line3, line4, line5);
             this.staffs.add(staff);
             this.bottomStaffs.add(staff);
+            info.addStaffHeight(staff.getBottomBound() - staff.getTopBound());
             staff.addToImage(lines);
           }
         }
@@ -270,7 +270,7 @@ public class SheetMusicMatrix extends ImageMatrix {
     List<Staff> results = new ArrayList<>();
     List<Staff> checked = new ArrayList<>();
     int margin =
-        (int) Math.ceil(this.info.getModeRangeDistance(modeThreshold).getUpperBound() / 2.0);
+        (int) Math.ceil(this.info.getModeLineDistance(modeThreshold).getUpperBound() / 2.0);
     for (Staff staff : this.staffs) {
       if (!checked.contains(staff)) {
         int top = staff.getTopBound();
@@ -310,9 +310,9 @@ public class SheetMusicMatrix extends ImageMatrix {
     }
   }
 
-  public ImageMatrix[] splitImage() {
+  public List<ImageMatrix> splitImage(MeasureDetection measures) {
     int numStaffs = this.staffs.size();
-    ImageMatrix[] split = new ImageMatrix[numStaffs];
+    List<ImageMatrix> split = new ArrayList<>();
     int[] splitPoints = new int[numStaffs - 1];
     Iterator<Staff> iterator = this.staffs.iterator();
     Staff previous = null;
@@ -330,23 +330,53 @@ public class SheetMusicMatrix extends ImageMatrix {
     }
 
     int numSplits = numStaffs - 1;
-    int endCol = this.cols() - 1;
+    int distance = 0;
+    for (i = 1; i < numSplits; i++) {
+      distance += splitPoints[i] - splitPoints[i - 1];
+    }
+    distance = (int) Math.ceil(((double) distance) / (numSplits - 1));
+
     for (i = 0; i < numSplits; i++) {
       int startRow;
       if (i == 0) {
-        startRow = 0;
+        startRow = splitPoints[i] - distance;
       }
       else {
         startRow = splitPoints[i - 1];
       }
-      Core.line(this, new org.opencv.core.Point(0, splitPoints[i]),
-          new org.opencv.core.Point(this.cols() - 1, splitPoints[i]), new org.opencv.core.Scalar(
-              255));
-      split[i] = new ImageMatrix(this.submat(startRow, splitPoints[i], 0, endCol));
+
+      this.splitOnMeasures(split, startRow, splitPoints[i], measures);
+
     }
-    this.writeImage("splitTest.png");
-    split[i] = new ImageMatrix(this.submat(splitPoints[i - 1], this.rows() - 1, 0, endCol));
+    int endRow = splitPoints[i - 1] + distance;
+    if (endRow >= this.rows()) {
+      endRow = this.rows() - 1;
+    }
+    this.splitOnMeasures(split, splitPoints[i - 1], endRow, measures);
+
     return split;
+  }
+
+  private void splitOnMeasures(List<ImageMatrix> splitImages, int startY, int endY,
+      MeasureDetection measures) {
+    int endCol = this.cols() - 1;
+    List<MeasureLine> inRange = measures.getRange(startY, endY + 1);
+    if (inRange.size() > 0) {
+      int startX = 0;
+      for (MeasureLine measure : inRange) {
+        if (measure.xBeginCoordinate == startX + 1) {
+          startX++;
+          continue;
+        }
+        splitImages.add(new ImageMatrix(this.submat(startY, endY, startX,
+            (int) measure.xBeginCoordinate)));
+        startX = (int) Math.ceil(measure.xEndCoordinate);
+      }
+      splitImages.add(new ImageMatrix(this.submat(startY, endY, startX, endCol)));
+    }
+    else {
+      splitImages.add(new ImageMatrix(this.submat(startY, endY, 0, endCol)));
+    }
   }
 
   public static SheetMusicMatrix readImage(String filePath, int flags) {
@@ -378,12 +408,12 @@ public class SheetMusicMatrix extends ImageMatrix {
             if (y != 0) {
               // There was a background section between first foreground pixel and top of sheet
               if (lineEnd == -1) {
-                info.addDistance(lineBegin);
+                info.addLineDistance(lineBegin);
               }
 
               // There was a background section between foreground sections
               else {
-                info.addDistance(lineBegin - lineEnd - 1);
+                info.addLineDistance(lineBegin - lineEnd - 1);
               }
             }
           }
@@ -398,12 +428,12 @@ public class SheetMusicMatrix extends ImageMatrix {
         else if (lineBegin != -1) {
           // One pixel high
           if (lineEnd == -1 || lineBegin > lineEnd) {
-            info.addHeight(1);
+            info.addLineHeight(1);
           }
 
           // Foreground section was more than 1 pixel high
           else {
-            info.addHeight(lineEnd - lineBegin + 1);
+            info.addLineHeight(lineEnd - lineBegin + 1);
           }
           lineBegin = -1;
         }

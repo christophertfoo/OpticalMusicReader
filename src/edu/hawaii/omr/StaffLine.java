@@ -123,7 +123,7 @@ public class StaffLine {
     int leftX = this.getLeftEdgeX();
     double middleRight = (this.getRightEdgeBottomY() + this.getRightEdgeTopY()) / 2.0;
     int rightX = this.getRightEdgeX();
-    int height = info.getModeRangeHeight(0.33).getUpperBound() + lineHeightAdjustment;
+    int height = info.getModeLineHeight(0.33).getUpperBound() + lineHeightAdjustment;
     if (leftX == rightX) {
       for(Point point : this.points) {
         image.put(point.getY(), point.getX(), 255);
