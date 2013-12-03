@@ -1,7 +1,11 @@
 package edu.hawaii.omr;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
@@ -13,7 +17,7 @@ public class MeasureDetection {
 
   private Mat image;
   private int stafflineHeight;
-  private List<MeasureLines> measureLines = new ArrayList<MeasureLines>();
+  private SortedSet<MeasureLine> measureLines = new TreeSet<>(new MeasureLine.BeginYComparator());
 
   public MeasureDetection(Mat image, StaffInfo info) {
     this.image = image;
@@ -50,14 +54,24 @@ public class MeasureDetection {
       if (vec[0] == vec[2]) {
         Core.line(verticalLineOutput, new Point(vec[0], vec[1]), new Point(vec[2], vec[3]),
             new Scalar(150, 150, 0), 2);
-        measureLines.add(new MeasureLines(vec[0], vec[1], vec[2], vec[3]));
+        MeasureLine line = new MeasureLine(vec[0], vec[1], vec[2], vec[3]);
+        this.measureLines.add(line);
       }
     }
     String filename = "OpenCVMeasureLines.png";
     Highgui.imwrite(filename, verticalLineOutput);
   }
 
-  public List<MeasureLines> getMeasureLines() {
+  public List<MeasureLine> getRange(int topY, int bottomY) {
+    Set<MeasureLine> inRange =
+        this.measureLines.subSet(new MeasureLine(0, topY, Integer.MAX_VALUE, Integer.MAX_VALUE),
+            new MeasureLine(Integer.MAX_VALUE, bottomY, Integer.MAX_VALUE, Integer.MAX_VALUE));
+    List<MeasureLine> sorted = new ArrayList<>(inRange);
+    Collections.sort(sorted, new MeasureLine.BeginXComparator());
+    return sorted;
+  }
+
+  public SortedSet<MeasureLine> getMeasureLines() {
     return measureLines;
   }
 }

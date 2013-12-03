@@ -13,7 +13,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.highgui.Highgui;
 
@@ -311,9 +310,9 @@ public class SheetMusicMatrix extends ImageMatrix {
     }
   }
 
-  public ImageMatrix[] splitImage() {
+  public List<ImageMatrix> splitImage(MeasureDetection measures) {
     int numStaffs = this.staffs.size();
-    ImageMatrix[] split = new ImageMatrix[numStaffs];
+    List<ImageMatrix> split = new ArrayList<>();
     int[] splitPoints = new int[numStaffs - 1];
     Iterator<Staff> iterator = this.staffs.iterator();
     Staff previous = null;
@@ -331,19 +330,53 @@ public class SheetMusicMatrix extends ImageMatrix {
     }
 
     int numSplits = numStaffs - 1;
-    int endCol = this.cols() - 1;
+    int distance = 0;
+    for (i = 1; i < numSplits; i++) {
+      distance += splitPoints[i] - splitPoints[i - 1];
+    }
+    distance = (int) Math.ceil(((double) distance) / (numSplits - 1));
+
     for (i = 0; i < numSplits; i++) {
       int startRow;
       if (i == 0) {
-        startRow = 0;
+        startRow = splitPoints[i] - distance;
       }
       else {
         startRow = splitPoints[i - 1];
       }
-      split[i] = new ImageMatrix(this.submat(startRow, splitPoints[i], 0, endCol));
+
+      this.splitOnMeasures(split, startRow, splitPoints[i], measures);
+
     }
-    split[i] = new ImageMatrix(this.submat(splitPoints[i - 1], this.rows() - 1, 0, endCol));
+    int endRow = splitPoints[i - 1] + distance;
+    if (endRow >= this.rows()) {
+      endRow = this.rows() - 1;
+    }
+    this.splitOnMeasures(split, splitPoints[i - 1], endRow, measures);
+
     return split;
+  }
+
+  private void splitOnMeasures(List<ImageMatrix> splitImages, int startY, int endY,
+      MeasureDetection measures) {
+    int endCol = this.cols() - 1;
+    List<MeasureLine> inRange = measures.getRange(startY, endY + 1);
+    if (inRange.size() > 0) {
+      int startX = 0;
+      for (MeasureLine measure : inRange) {
+        if (measure.xBeginCoordinate == startX + 1) {
+          startX++;
+          continue;
+        }
+        splitImages.add(new ImageMatrix(this.submat(startY, endY, startX,
+            (int) measure.xBeginCoordinate)));
+        startX = (int) Math.ceil(measure.xEndCoordinate);
+      }
+      splitImages.add(new ImageMatrix(this.submat(startY, endY, startX, endCol)));
+    }
+    else {
+      splitImages.add(new ImageMatrix(this.submat(startY, endY, 0, endCol)));
+    }
   }
 
   public static SheetMusicMatrix readImage(String filePath, int flags) {
