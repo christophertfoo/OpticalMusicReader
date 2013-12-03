@@ -4,9 +4,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.SortedSet;
 import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
@@ -27,7 +24,7 @@ public class Driver {
     }
     System.out.println("Going on...");
     SheetMusicMatrix image =
-        SheetMusicMatrix.readImage("YaGottaTry_1.png", Highgui.CV_LOAD_IMAGE_GRAYSCALE);
+        SheetMusicMatrix.readImage("synthetic.bmp", Highgui.CV_LOAD_IMAGE_GRAYSCALE);
 
     // Do some image clean up
     image.makeBinary();
@@ -54,8 +51,8 @@ public class Driver {
      for(int i = 0, numSplit = split.length; i < numSplit; i++) {
        split[i].writeImage("split_" + i + ".png");
     
-    MeasureDetection measureMat = new MeasureDetection(Highgui.imread("diff4.png", Highgui.CV_LOAD_IMAGE_GRAYSCALE));
-    measureMat.setStaffLineHeight(lineImage);
+    MeasureDetection measureMat = new MeasureDetection(Highgui.imread("heuristic.png", Highgui.CV_LOAD_IMAGE_GRAYSCALE), info);
+//    measureMat.setStaffLineHeight(mergedLines);
     measureMat.detectMeasure();
     
    // NoteHead noteheadtest = new NoteHead(19);

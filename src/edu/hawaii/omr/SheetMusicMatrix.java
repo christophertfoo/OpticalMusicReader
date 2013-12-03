@@ -74,8 +74,8 @@ public class SheetMusicMatrix extends ImageMatrix {
 
   public ImageMatrix findStaffLines(StaffInfo info) {
     ImageMatrix lines = new ImageMatrix(this.rows(), this.cols(), this.type());
-    Range distanceRange = info.getModeRangeDistance(modeThreshold);
-    Range heightRange = info.getModeRangeHeight(modeThreshold);
+    Range distanceRange = info.getModeLineDistance(modeThreshold);
+    Range heightRange = info.getModeLineHeight(modeThreshold);
 
     heightRange.setLowerBound(heightRange.getLowerBound() - 1);
     distanceRange.setUpperBound(distanceRange.getUpperBound() + 1);
@@ -188,6 +188,7 @@ public class SheetMusicMatrix extends ImageMatrix {
             Staff staff = new Staff(line1, line2, line3, line4, line5);
             this.staffs.add(staff);
             this.bottomStaffs.add(staff);
+            info.addStaffHeight(staff.getBottomBound() - staff.getTopBound());
             staff.addToImage(lines);
           }
         }
@@ -270,7 +271,7 @@ public class SheetMusicMatrix extends ImageMatrix {
     List<Staff> results = new ArrayList<>();
     List<Staff> checked = new ArrayList<>();
     int margin =
-        (int) Math.ceil(this.info.getModeRangeDistance(modeThreshold).getUpperBound() / 2.0);
+        (int) Math.ceil(this.info.getModeLineDistance(modeThreshold).getUpperBound() / 2.0);
     for (Staff staff : this.staffs) {
       if (!checked.contains(staff)) {
         int top = staff.getTopBound();
@@ -339,12 +340,8 @@ public class SheetMusicMatrix extends ImageMatrix {
       else {
         startRow = splitPoints[i - 1];
       }
-      Core.line(this, new org.opencv.core.Point(0, splitPoints[i]),
-          new org.opencv.core.Point(this.cols() - 1, splitPoints[i]), new org.opencv.core.Scalar(
-              255));
       split[i] = new ImageMatrix(this.submat(startRow, splitPoints[i], 0, endCol));
     }
-    this.writeImage("splitTest.png");
     split[i] = new ImageMatrix(this.submat(splitPoints[i - 1], this.rows() - 1, 0, endCol));
     return split;
   }
@@ -378,12 +375,12 @@ public class SheetMusicMatrix extends ImageMatrix {
             if (y != 0) {
               // There was a background section between first foreground pixel and top of sheet
               if (lineEnd == -1) {
-                info.addDistance(lineBegin);
+                info.addLineDistance(lineBegin);
               }
 
               // There was a background section between foreground sections
               else {
-                info.addDistance(lineBegin - lineEnd - 1);
+                info.addLineDistance(lineBegin - lineEnd - 1);
               }
             }
           }
@@ -398,12 +395,12 @@ public class SheetMusicMatrix extends ImageMatrix {
         else if (lineBegin != -1) {
           // One pixel high
           if (lineEnd == -1 || lineBegin > lineEnd) {
-            info.addHeight(1);
+            info.addLineHeight(1);
           }
 
           // Foreground section was more than 1 pixel high
           else {
-            info.addHeight(lineEnd - lineBegin + 1);
+            info.addLineHeight(lineEnd - lineBegin + 1);
           }
           lineBegin = -1;
         }
