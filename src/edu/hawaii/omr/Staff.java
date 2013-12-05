@@ -2,7 +2,7 @@ package edu.hawaii.omr;
 
 import java.util.Comparator;
 
-public class Staff {
+public class Staff implements Cloneable {
   private StaffLine[] lines;
 
   private int leftBound;
@@ -16,7 +16,7 @@ public class Staff {
     this.leftBound = leftBound;
     this.rightBound = rightBound;
   }
-  
+
   public Staff(StaffLine line1, StaffLine line2, StaffLine line3, StaffLine line4, StaffLine line5) {
     this.lines = new StaffLine[5];
     this.lines[0] = line1;
@@ -41,7 +41,7 @@ public class Staff {
       line.addToImage(image);
     }
   }
-  
+
   public void addToImage(ImageMatrix image, StaffInfo info) {
     for (StaffLine line : this.lines) {
       line.addToImage(image, info);
@@ -61,25 +61,35 @@ public class Staff {
     return null;
   }
 
-  public boolean adjacentTo(Staff other) {
-    boolean adjacent = true;
-    for (int i = 0, length = this.lines.length; adjacent && i < length; i++) {
-      adjacent = adjacent && this.lines[i].adjacentTo(other.lines[i]);
+  public void translateVertically(int amount) {
+    for (StaffLine line : this.lines) {
+      line.translateVertically(amount);
     }
-    return adjacent;
+    this.setBounds();
   }
-  
+
   public int getTopBound() {
     return this.topBound;
   }
+
   public int getBottomBound() {
     return this.bottomBound;
   }
+
   public int getLeftBound() {
     return this.leftBound;
   }
+
   public int getRightBound() {
     return this.rightBound;
+  }
+
+  @Override
+  public Staff clone() {
+    Staff clone =
+        new Staff(this.lines[0].clone(), this.lines[1].clone(), this.lines[2].clone(),
+            this.lines[3].clone(), this.lines[4].clone());
+    return clone;
   }
 
   void setBounds() {
@@ -124,58 +134,58 @@ public class Staff {
         last.getLeftEdgeBottomY() > last.getRightEdgeBottomY() ? last.getLeftEdgeBottomY() : last
             .getRightEdgeBottomY();
   }
-  
+
   public static class TopComparator implements Comparator<Staff> {
 
     @Override
     public int compare(Staff o1, Staff o2) {
-      
+
       // Compare top boundaries first
       int difference = o1.topBound - o2.topBound;
-      if(difference != 0) {
+      if (difference != 0) {
         return difference;
       }
       // Compare bottom boundaries second
       difference = o1.bottomBound - o2.bottomBound;
-      if(difference != 0) {
+      if (difference != 0) {
         return difference;
       }
       // Compare left boundaries third
       difference = o1.leftBound - o2.leftBound;
-      if(difference != 0) {
+      if (difference != 0) {
         return difference;
       }
       // Compare right boundaries last
       difference = o1.rightBound - o2.rightBound;
       return difference;
     }
-    
+
   }
-  
+
   public static class BottomComparator implements Comparator<Staff> {
 
     @Override
     public int compare(Staff o1, Staff o2) {
-      
+
       // Compare bottom boundaries first
       int difference = o1.bottomBound - o2.bottomBound;
-      if(difference != 0) {
+      if (difference != 0) {
         return difference;
       }
       // Compare top boundaries second
       difference = o1.topBound - o2.topBound;
-      if(difference != 0) {
+      if (difference != 0) {
         return difference;
       }
       // Compare left boundaries third
       difference = o1.leftBound - o2.leftBound;
-      if(difference != 0) {
+      if (difference != 0) {
         return difference;
       }
       // Compare right boundaries last
       difference = o1.rightBound - o2.rightBound;
       return difference;
     }
-    
+
   }
 }

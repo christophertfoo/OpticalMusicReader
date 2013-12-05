@@ -1,16 +1,15 @@
 package edu.hawaii.omr;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
 public class ImageMatrix extends Mat {
+  
+  protected boolean isBinary = false;  
+  protected boolean hasWhiteForeground = false;
 
   public ImageMatrix(Mat matrix) {
     super(matrix.rows(), matrix.cols(), matrix.type());
@@ -18,17 +17,24 @@ public class ImageMatrix extends Mat {
   }
 
   public ImageMatrix(int rows, int cols, int type) {
-    super(rows, cols, type);
+    this(Mat.zeros(rows, cols, type));
   }
 
   public ImageMatrix makeBinary() {
     Mat temp = new Mat(this.rows(), this.cols(), this.type());
     Imgproc.threshold(this, temp, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
     temp.copyTo(this);
+    this.isBinary = true;
     return this;
   }
 
   public ImageMatrix close(int elementType, int width, int height) {
+    if(!this.isBinary) {
+      this.makeBinary();
+    }
+    if(!this.hasWhiteForeground) {
+      this.invert();
+    }
     Mat structuringElement = Imgproc.getStructuringElement(elementType, new Size(width, height));
     Mat dilated = new Mat(this.rows(), this.cols(), this.type());
     Imgproc.dilate(this, dilated, structuringElement);
@@ -37,6 +43,12 @@ public class ImageMatrix extends Mat {
   }
 
   public ImageMatrix open(int elementType, int width, int height) {
+    if(!this.isBinary) {
+      this.makeBinary();
+    }
+    if(!this.hasWhiteForeground) {
+      this.invert();
+    }
     Mat structuringElement = Imgproc.getStructuringElement(elementType, new Size(width, height));
     Mat eroded = new Mat(this.rows(), this.cols(), this.type());
     Imgproc.erode(this, eroded, structuringElement);
@@ -45,23 +57,8 @@ public class ImageMatrix extends Mat {
   }
 
   public ImageMatrix invert() {
-    ExecutorService threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    this.invert(threadPool);
-    threadPool.shutdown();
-    return this;
-  }
-  
-  public ImageMatrix invert(ExecutorService threadPool) {
-    List<Callable<Void>> invertCallables = new ArrayList<>();
-    for (int y = 0, height = this.rows(); y < height; y++) {
-      invertCallables.add(new InvertCallable(this, y));
-    }
-    try {
-      threadPool.invokeAll(invertCallables);
-    }
-    catch (InterruptedException e) {
-      // Do nothing...
-    }
+    Core.bitwise_not(this, this);
+    this.hasWhiteForeground = !this.hasWhiteForeground;
     return this;
   }
 
@@ -191,33 +188,11 @@ public class ImageMatrix extends Mat {
     Highgui.imwrite(filePath, this);
   }
 
-  public static ImageMatrix readImage(String filePath, int flags) {
+  public static ImageMatrix readImage(String filePath, int flags, boolean whiteForeground) {
     Mat matrix = Highgui.imread(filePath, flags);
-    return new ImageMatrix(matrix);
+    ImageMatrix image = new ImageMatrix(matrix);
+    image.hasWhiteForeground = whiteForeground;
+    return image;
   }
   
-  private class InvertCallable implements Callable<Void> {
-    
-    private ImageMatrix matrix;
-    private final int y;
-    
-    public InvertCallable(ImageMatrix matrix, int y) {
-      this.matrix = matrix;
-      this.y = y;
-    }
-
-    @Override
-    public Void call() throws Exception {
-      int numChannels = this.matrix.channels();
-      for (int x = 0, width = this.matrix.width(); x < width; x++) {
-        double[] values = this.matrix.get(this.y, x);
-        for (int i = 0; i < numChannels; i++) {
-          values[i] = 255 - values[i];
-        }
-        this.matrix.put(this.y, x, values);
-      }
-      return null;
-    }
-    
-  }
 }

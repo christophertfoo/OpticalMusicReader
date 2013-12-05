@@ -24,20 +24,19 @@ public class SheetMusicMatrix extends ImageMatrix {
   private static final Staff.TopComparator staffComparator = new Staff.TopComparator();
   private static final Staff.BottomComparator bottomComparator = new Staff.BottomComparator();
   private final int minStaffWidth;
-  private SortedSet<Staff> staffs;
-  private SortedSet<Staff> bottomStaffs;
-  private StaffInfo info;
+  
+  private SortedSet<Staff> staffs = null;
+  private StaffInfo info = null;
 
   public SheetMusicMatrix(Mat matrix) {
-    this(matrix.rows(), matrix.cols(), matrix.type());
+    super(matrix.rows(), matrix.cols(), matrix.type());
     matrix.copyTo(this);
+    this.staffs = new TreeSet<>(staffComparator);
+    this.minStaffWidth = (int) Math.round(this.cols() * staffWidthThreshold);
   }
 
   public SheetMusicMatrix(int rows, int cols, int type) {
-    super(rows, cols, type);
-    this.staffs = new TreeSet<>(staffComparator);
-    this.bottomStaffs = new TreeSet<>(bottomComparator);
-    this.minStaffWidth = (int) Math.round(cols * staffWidthThreshold);
+    this(Mat.zeros(rows, cols, type));
   }
 
   public StaffInfo getStaffInfo() {
@@ -49,6 +48,15 @@ public class SheetMusicMatrix extends ImageMatrix {
   }
 
   public StaffInfo getStaffInfo(ExecutorService threadPool) {
+    
+    if(!this.isBinary) {
+      this.makeBinary();
+    }
+    
+    if(!this.hasWhiteForeground) {
+      this.invert();
+    }
+    
     StaffInfo info = new StaffInfo();
 
     List<FindInfoCallable> callables = new ArrayList<>();
@@ -71,10 +79,13 @@ public class SheetMusicMatrix extends ImageMatrix {
     return info;
   }
 
-  public ImageMatrix findStaffLines(StaffInfo info) {
-    ImageMatrix lines = new ImageMatrix(this.rows(), this.cols(), this.type());
-    Range distanceRange = info.getModeLineDistance(modeThreshold);
-    Range heightRange = info.getModeLineHeight(modeThreshold);
+  public void findStaffLines() {
+    if (this.info == null) {
+      this.getStaffInfo();
+    }
+    this.staffs = new TreeSet<>(staffComparator);
+    Range distanceRange = this.info.getModeLineDistance(modeThreshold);
+    Range heightRange = this.info.getModeLineHeight(modeThreshold);
 
     heightRange.setLowerBound(heightRange.getLowerBound() - 1);
     distanceRange.setUpperBound(distanceRange.getUpperBound() + 1);
@@ -186,14 +197,11 @@ public class SheetMusicMatrix extends ImageMatrix {
 
             Staff staff = new Staff(line1, line2, line3, line4, line5);
             this.staffs.add(staff);
-            this.bottomStaffs.add(staff);
-            info.addStaffHeight(staff.getBottomBound() - staff.getTopBound());
-            staff.addToImage(lines);
+            this.info.addStaffHeight(staff.getBottomBound() - staff.getTopBound());
           }
         }
       }
     }
-    return lines;
   }
 
   private int checkHeight(int x, int y, Range heightRange) {
@@ -225,27 +233,36 @@ public class SheetMusicMatrix extends ImageMatrix {
   }
 
   public ImageMatrix getStaffLineImage() {
-    ImageMatrix merged = new ImageMatrix(this.rows(), this.cols(), this.type());
+    if (this.staffs == null) {
+      this.findStaffLines();
+    }
+    ImageMatrix image = new ImageMatrix(this.rows(), this.cols(), this.type());
     for (Staff staff : this.staffs) {
       if (this.info != null) {
-        staff.addToImage(merged, this.info);
+        staff.addToImage(image, this.info);
       }
       else {
-        staff.addToImage(merged);
+        staff.addToImage(image);
       }
     }
-    return merged;
+    image.isBinary = this.isBinary;
+    image.hasWhiteForeground = this.hasWhiteForeground;
+    return image;
   }
 
-  public void mergeConnectedStaffs(Map<Integer, SortedSet<Point>> labelMap) {
+  public void mergeConnectedStaffs() {
+    if(this.staffs == null) {
+      this.findStaffLines();
+    }
+    ConnectedComponentFinder finder = new ConnectedComponentFinder();
+    finder.findConnectedComponents(this.getStaffLineImage(), this.hasWhiteForeground ? 255 : 0);
+    Map<Integer, SortedSet<Point>> labelMap = finder.makeLabelMap();
     Set<Staff> matched = new HashSet<>();
     for (SortedSet<Point> component : labelMap.values()) {
       this.associateComponent(component, matched);
     }
     this.staffs.clear();
     this.staffs.addAll(matched);
-    this.bottomStaffs.clear();
-    this.bottomStaffs.addAll(matched);
   }
 
   private boolean associateComponent(SortedSet<Point> component, Set<Staff> matched) {
@@ -267,10 +284,17 @@ public class SheetMusicMatrix extends ImageMatrix {
   }
 
   public void mergeSeparatedStaffs() {
+    if(this.staffs == null) {
+      this.findStaffLines();
+    }
+    
     List<Staff> results = new ArrayList<>();
     List<Staff> checked = new ArrayList<>();
+    SortedSet<Staff> bottomStaffs = new TreeSet<>(bottomComparator);
+    bottomStaffs.addAll(this.staffs);
     int margin =
         (int) Math.ceil(this.info.getModeLineDistance(modeThreshold).getUpperBound() / 2.0);
+    
     for (Staff staff : this.staffs) {
       if (!checked.contains(staff)) {
         int top = staff.getTopBound();
@@ -279,7 +303,7 @@ public class SheetMusicMatrix extends ImageMatrix {
             new HashSet<Staff>(this.staffs.subSet(new Staff(top - margin, 0, 0, 0), new Staff(top
                 + margin + 1, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE)));
         Set<Staff> bottomRange =
-            this.bottomStaffs.subSet(new Staff(0, bottom - margin, 0, 0), new Staff(
+            bottomStaffs.subSet(new Staff(0, bottom - margin, 0, 0), new Staff(
                 Integer.MAX_VALUE, bottom + margin + 1, Integer.MAX_VALUE, Integer.MAX_VALUE));
         inRange.addAll(bottomRange);
         inRange.removeAll(checked);
@@ -301,22 +325,22 @@ public class SheetMusicMatrix extends ImageMatrix {
     }
     this.staffs.clear();
     this.staffs.addAll(results);
-    int i = 1;
-    for (Staff staff : this.staffs) {
-      ImageMatrix matrix = new ImageMatrix(this.rows(), this.cols(), this.type());
-      staff.addToImage(matrix, this.info);
-      matrix.writeImage("staff_" + i + ".png");
-      i++;
-    }
+  }
+  
+  public void mergeStaffs() {
+    this.mergeConnectedStaffs();
+    this.mergeSeparatedStaffs();
   }
 
-  public List<ImageMatrix> splitImage(MeasureDetection measures) {
+  public List<StaffMatrix> splitImage() {
     int numStaffs = this.staffs.size();
-    List<ImageMatrix> split = new ArrayList<>();
+    List<StaffMatrix> split = new ArrayList<>();
     int[] splitPoints = new int[numStaffs - 1];
     Iterator<Staff> iterator = this.staffs.iterator();
     Staff previous = null;
     int i = 0;
+    
+    // Find split points
     while (iterator.hasNext()) {
       Staff next = iterator.next();
       if (previous == null) {
@@ -329,6 +353,7 @@ public class SheetMusicMatrix extends ImageMatrix {
       }
     }
 
+    // Find average distance between splits for the first and last staff
     int numSplits = numStaffs - 1;
     int distance = 0;
     for (i = 1; i < numSplits; i++) {
@@ -336,6 +361,12 @@ public class SheetMusicMatrix extends ImageMatrix {
     }
     distance = (int) Math.ceil(((double) distance) / (numSplits - 1));
 
+    // Split the sheet
+    StaffMatrix staffMat;
+    Staff containedStaff;
+    int endCol = this.cols() - 1;
+    
+    iterator = this.staffs.iterator();
     for (i = 0; i < numSplits; i++) {
       int startRow;
       if (i == 0) {
@@ -345,43 +376,40 @@ public class SheetMusicMatrix extends ImageMatrix {
         startRow = splitPoints[i - 1];
       }
 
-      this.splitOnMeasures(split, startRow, splitPoints[i], measures);
-
+      // TODO Extract into method
+      staffMat = new StaffMatrix(this.submat(startRow, splitPoints[i], 0, endCol));
+      staffMat.setStaffInfo(this.info);
+      containedStaff = iterator.next().clone();
+      containedStaff.translateVertically(-startRow);
+      staffMat.setStaff(containedStaff);
+      staffMat.isBinary = this.isBinary;
+      staffMat.hasWhiteForeground = this.hasWhiteForeground;
+      split.add(staffMat);
     }
+    
+    // Split the last staff
     int endRow = splitPoints[i - 1] + distance;
     if (endRow >= this.rows()) {
       endRow = this.rows() - 1;
     }
-    this.splitOnMeasures(split, splitPoints[i - 1], endRow, measures);
-
+    
+    staffMat = new StaffMatrix(this.submat(splitPoints[i - 1], endRow, 0, endCol));
+    staffMat.setStaffInfo(this.info);
+    containedStaff = iterator.next().clone();
+    containedStaff.translateVertically(-splitPoints[i - 1]);
+    staffMat.setStaff(containedStaff);
+    staffMat.isBinary = this.isBinary;
+    staffMat.hasWhiteForeground = this.hasWhiteForeground;
+    split.add(staffMat);
     return split;
   }
 
-  private void splitOnMeasures(List<ImageMatrix> splitImages, int startY, int endY,
-      MeasureDetection measures) {
-    int endCol = this.cols() - 1;
-    List<MeasureLine> inRange = measures.getRange(startY, endY + 1);
-    if (inRange.size() > 0) {
-      int startX = 0;
-      for (MeasureLine measure : inRange) {
-        if (measure.xBeginCoordinate == startX + 1) {
-          startX++;
-          continue;
-        }
-        splitImages.add(new ImageMatrix(this.submat(startY, endY, startX,
-            (int) measure.xBeginCoordinate)));
-        startX = (int) Math.ceil(measure.xEndCoordinate);
-      }
-      splitImages.add(new ImageMatrix(this.submat(startY, endY, startX, endCol)));
-    }
-    else {
-      splitImages.add(new ImageMatrix(this.submat(startY, endY, 0, endCol)));
-    }
-  }
 
-  public static SheetMusicMatrix readImage(String filePath, int flags) {
+  public static SheetMusicMatrix readImage(String filePath, int flags, boolean whiteForeground) {
     Mat matrix = Highgui.imread(filePath, flags);
-    return new SheetMusicMatrix(matrix);
+    SheetMusicMatrix sheet = new SheetMusicMatrix(matrix);
+    sheet.hasWhiteForeground = whiteForeground;
+    return sheet;
   }
 
   private class FindInfoCallable implements Callable<StaffInfo> {
@@ -396,18 +424,23 @@ public class SheetMusicMatrix extends ImageMatrix {
 
     @Override
     public StaffInfo call() throws Exception {
+      int foregroundColor = hasWhiteForeground ? 255 : 0;
+
       StaffInfo info = new StaffInfo();
-      int lineEnd = -1;
-      int lineBegin = -1;
+
+      final int notSet = -1;
+      int lineEnd = notSet;
+      int lineBegin = notSet;
+
       for (int y = 0, height = this.sheet.rows(); y < height; y++) {
         int rgb = (int) this.sheet.get(y, column)[0];
-        if (rgb == 255) {
+        if (rgb == foregroundColor) {
           // Start of a new foreground section
-          if (lineBegin == -1) {
+          if (lineBegin == notSet) {
             lineBegin = y;
             if (y != 0) {
               // There was a background section between first foreground pixel and top of sheet
-              if (lineEnd == -1) {
+              if (lineEnd == notSet) {
                 info.addLineDistance(lineBegin);
               }
 
@@ -425,9 +458,9 @@ public class SheetMusicMatrix extends ImageMatrix {
         }
 
         // Encountered background pixel after going through a foreground section
-        else if (lineBegin != -1) {
+        else if (lineBegin != notSet) {
           // One pixel high
-          if (lineEnd == -1 || lineBegin > lineEnd) {
+          if (lineEnd == notSet || lineBegin > lineEnd) {
             info.addLineHeight(1);
           }
 
@@ -435,7 +468,7 @@ public class SheetMusicMatrix extends ImageMatrix {
           else {
             info.addLineHeight(lineEnd - lineBegin + 1);
           }
-          lineBegin = -1;
+          lineBegin = notSet;
         }
       }
       return info;
