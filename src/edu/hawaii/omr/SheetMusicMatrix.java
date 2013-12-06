@@ -377,11 +377,9 @@ public class SheetMusicMatrix extends ImageMatrix {
       }
 
       // TODO Extract into method
-      staffMat = new StaffMatrix(this.submat(startRow, splitPoints[i], 0, endCol));
-      staffMat.setStaffInfo(this.info);
       containedStaff = iterator.next().clone();
       containedStaff.translateVertically(-startRow);
-      staffMat.setStaff(containedStaff);
+      staffMat = new StaffMatrix(this.submat(startRow, splitPoints[i], 0, endCol), containedStaff, this.info);
       staffMat.isBinary = this.isBinary;
       staffMat.hasWhiteForeground = this.hasWhiteForeground;
       split.add(staffMat);
@@ -393,11 +391,9 @@ public class SheetMusicMatrix extends ImageMatrix {
       endRow = this.rows() - 1;
     }
     
-    staffMat = new StaffMatrix(this.submat(splitPoints[i - 1], endRow, 0, endCol));
-    staffMat.setStaffInfo(this.info);
     containedStaff = iterator.next().clone();
     containedStaff.translateVertically(-splitPoints[i - 1]);
-    staffMat.setStaff(containedStaff);
+    staffMat = new StaffMatrix(this.submat(splitPoints[i - 1], endRow, 0, endCol), containedStaff, this.info);
     staffMat.isBinary = this.isBinary;
     staffMat.hasWhiteForeground = this.hasWhiteForeground;
     split.add(staffMat);

@@ -60,6 +60,10 @@ public class Staff implements Cloneable {
     }
     return null;
   }
+  
+  public boolean contains(double x, double y, StaffInfo info, int lineIndex) {
+    return this.lines[lineIndex].contains(x, y, info);
+  }
 
   public void translateVertically(int amount) {
     for (StaffLine line : this.lines) {

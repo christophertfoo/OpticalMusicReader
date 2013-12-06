@@ -23,7 +23,7 @@ public class Driver {
     }
     System.out.println("Going on...");
     SheetMusicMatrix image =
-        SheetMusicMatrix.readImage("Acha_1.bmp", Highgui.CV_LOAD_IMAGE_GRAYSCALE, false);
+        SheetMusicMatrix.readImage("YaGottaTry_1.png", Highgui.CV_LOAD_IMAGE_GRAYSCALE, false);
 
     // Do some image clean up
     image.close(Imgproc.MORPH_RECT, 3, 3);
@@ -31,23 +31,28 @@ public class Driver {
     System.out.println("Finding Staff Lines...");
     image.findStaffLines();
     ImageMatrix testLines = image.getStaffLineImage();
-    testLines.writeImage("lines.png");
+    testLines.writeImage("results/lines.png");
 
     System.out.println("Merging Staff Lines...");
     image.mergeStaffs();
-    image.getStaffLineImage().writeImage("merged.png");
+    ImageMatrix lines = image.getStaffLineImage();
+    lines.writeImage("results/merged.png");
+    image.subtractImage(lines).invert().writeImage("results/removed-sub.png");
+    image.subtractImagePreserve(lines, false).invert().writeImage("results/removed.png");
     
     System.out.println("Splitting the image into staffs...");
     List<StaffMatrix> split = image.splitImage();
     int i = 1;
-    
+    int j = 1;
     System.out.println("Splitting the staffs into measures...");
     for (StaffMatrix staff : split) {
-      List<ImageMatrix> measures = staff.splitIntoMeasures();
+      staff.getMeasureLineImage().writeImage("results/staff_"+ j + ".png");
+      List<MeasureMatrix> measures = staff.splitIntoMeasures();
       for(ImageMatrix measure : measures) {
-        measure.writeImage("measure_" + i + ".png");
+        measure.writeImage("results/measure_" + i + ".png");
         i++;
       }
+      j++;
     }
 
   }

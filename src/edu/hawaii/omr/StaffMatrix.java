@@ -7,6 +7,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
 public class StaffMatrix extends ImageMatrix {
@@ -16,33 +18,22 @@ public class StaffMatrix extends ImageMatrix {
   private static MeasureLine.BeginXComparator measureXComparator =
       new MeasureLine.BeginXComparator();
 
-  private StaffInfo info = null;
-  private Staff staff = null;
+  private final StaffInfo info;
+  private final Staff staff;
   private SortedSet<MeasureLine> measureLines = null;
 
-  public StaffMatrix(Mat matrix) {
-    super(matrix.rows(), matrix.cols(), matrix.type());
-    matrix.copyTo(this);
-  }
-
-  public StaffMatrix(int rows, int cols, int type) {
-    this(Mat.zeros(rows, cols, type));
+  public StaffMatrix(Mat matrix, Staff staff, StaffInfo info) {
+    super(matrix);
+    this.staff = staff;
+    this.info = info;
   }
 
   public Staff getStaff() {
     return this.staff;
   }
 
-  public void setStaff(Staff staff) {
-    this.staff = staff;
-  }
-
   public StaffInfo getStaffInfo() {
     return this.info;
-  }
-
-  public void setStaffInfo(StaffInfo info) {
-    this.info = info;
   }
 
   public ImageMatrix getStaffLineImage() {
@@ -64,10 +55,29 @@ public class StaffMatrix extends ImageMatrix {
     return this.subtractImagePreserve(this.getStaffLineImage(), false);
   }
 
+  public ImageMatrix getMeasureLineImage() {
+    if (this.measureLines == null) {
+      this.findMeasureLines();
+    }
+    ImageMatrix image = new ImageMatrix(this.rows(), this.cols(), this.type());
+    Imgproc.cvtColor(this, image, Imgproc.COLOR_GRAY2RGB);
+
+    for (MeasureLine measure : this.measureLines) {
+      Core.line(image, new Point(measure.getxBeginCoordinate(), measure.getyBeginCoordinate()),
+          new Point(measure.getxEndCoordinate(), measure.getyEndCoordinate()),
+          new Scalar(255, 0, 0), 2);
+    }
+    Core.line(image, new Point(0, staff.getTopBound()),
+        new Point(this.cols() - 1, staff.getTopBound()), new Scalar(0, 0, 255), 2);
+    Core.line(image, new Point(0, staff.getBottomBound()),
+        new Point(this.cols() - 1, staff.getBottomBound()), new Scalar(0, 0, 255), 2);
+    return image;
+  }
+
   public void findMeasureLines() {
     this.measureLines = new TreeSet<>(measureYComparator);
     Mat lines = new Mat();
-    Imgproc.HoughLinesP(this.getNoLineImage(), lines, 1, Math.PI / 10, 10,
+    Imgproc.HoughLinesP(this.getNoLineImage(), lines, 1, Math.PI / 10, 5,
         this.info.getModeStaffHeight() - 5, 10);
 
     for (int i = 0; i < lines.cols(); i++) {
@@ -79,33 +89,40 @@ public class StaffMatrix extends ImageMatrix {
     }
   }
 
-  public List<ImageMatrix> splitIntoMeasures() {
+  public List<MeasureMatrix> splitIntoMeasures() {
 
     if (this.measureLines == null) {
       this.findMeasureLines();
     }
 
-    List<ImageMatrix> measureImages = new ArrayList<>();
+    List<MeasureMatrix> measureImages = new ArrayList<>();
     List<MeasureLine> sorted = new ArrayList<>(this.measureLines);
     Collections.sort(sorted, measureXComparator);
 
     int endCol = this.cols() - 1;
     int startX = 0;
     int endY = this.rows() - 1;
+    int noteWidth = this.info.getModeLineDistance() * 2;
     for (MeasureLine measure : sorted) {
       if (measure.xBeginCoordinate == startX + 1) {
         startX++;
         continue;
       }
-
-      ImageMatrix measureImage =
-          new ImageMatrix(this.submat(0, endY, startX, (int) measure.xBeginCoordinate));
-      if (Core.countNonZero(measureImage) > 0) {
-        measureImages.add(measureImage);
+      else if (this.staff.contains(measure.getxBeginCoordinate(), measure.getyBeginCoordinate(),
+          this.info, 0)
+          || this.staff.contains(measure.getxEndCoordinate(), measure.getyEndCoordinate(),
+              this.info, 4)) {
+        MeasureMatrix measureImage =
+            new MeasureMatrix(this.submat(0, endY, startX, (int) measure.xBeginCoordinate),
+                this.staff, this.info, startX);
+        if (measureImage.cols() >= noteWidth && Core.countNonZero(measureImage) > 0) {
+          measureImages.add(measureImage);
+        }
+        startX = (int) Math.ceil(measure.xEndCoordinate);
       }
-      startX = (int) Math.ceil(measure.xEndCoordinate);
     }
-    measureImages.add(new ImageMatrix(this.submat(0, endY, startX, endCol)));
+    measureImages.add(new MeasureMatrix(this.submat(0, endY, startX, endCol), this.staff,
+        this.info, startX));
     return measureImages;
   }
 
