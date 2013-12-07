@@ -60,7 +60,7 @@ public class Staff implements Cloneable {
     }
     return null;
   }
-  
+
   public boolean contains(double x, double y, StaffInfo info, int lineIndex) {
     return this.lines[lineIndex].contains(x, y, info);
   }
@@ -86,6 +86,182 @@ public class Staff implements Cloneable {
 
   public int getRightBound() {
     return this.rightBound;
+  }
+
+  public String getPitchTreble(double x, double y, StaffInfo info) {
+    StringBuilder pitchBuilder = new StringBuilder();
+    double halfLineHeight = info.getModeLineHeight() / 2.0;
+    int lineDistance = info.getModeLineDistance();
+    double lineCenterDistance = info.getModeLineHeight() + info.getModeLineDistance();
+    double margin = lineDistance / 4.0 + halfLineHeight;
+    if (y >= this.topBound && y <= this.bottomBound) {
+      double line1Center = this.lines[0].getLineEquation().calculateY(x);
+      double line2Center = this.lines[1].getLineEquation().calculateY(x);
+      double line3Center = this.lines[2].getLineEquation().calculateY(x);
+      double line4Center = this.lines[3].getLineEquation().calculateY(x);
+      double line5Center = this.lines[4].getLineEquation().calculateY(x);
+      
+      if(y < line1Center || y <= line1Center + margin) {
+        pitchBuilder.append("F5");
+      }
+      else if(y < line2Center - margin) {
+        pitchBuilder.append("E5");
+      }
+      else if(y <= line2Center + margin) {
+        pitchBuilder.append("D5");
+      }
+      else if(y < line3Center - margin) {
+        pitchBuilder.append("C5");
+      }
+      else if(y <= line3Center + margin) {
+        pitchBuilder.append("B4");
+      }
+      else if(y < line4Center - margin) {
+        pitchBuilder.append("A4");
+      }
+      else if(y <= line4Center + margin) {
+        pitchBuilder.append("G4");
+      }
+      else if(y <= line5Center - margin) {
+        pitchBuilder.append("F4");
+      }
+      else {
+        pitchBuilder.append("E4");
+      }
+    }
+    else if (y > this.topBound) {
+      double topCenterY = this.lines[0].getLineEquation().calculateY(x);
+      int nearestLedgerLine = (int) Math.round((topCenterY - y) / lineCenterDistance);
+      double nearestLedgerCenter = topCenterY - (nearestLedgerLine * lineCenterDistance);
+
+      if (y >= nearestLedgerCenter - margin && y <= nearestLedgerCenter + margin) {
+        pitchBuilder.append(getPitchAboveTreble(nearestLedgerLine, false));
+      }
+      else {
+        pitchBuilder.append(getPitchAboveTreble(y < nearestLedgerCenter ? nearestLedgerLine
+            : nearestLedgerLine - 1, true));
+      }
+    }
+    else {
+      double bottomCenterY = this.lines[4].getLineEquation().calculateY(x);
+      int nearestLedgerLine = (int) Math.round((y - bottomCenterY) / lineCenterDistance);
+      double nearestLedgerCenter = bottomCenterY + (nearestLedgerLine * lineCenterDistance);
+
+      if (y >= nearestLedgerCenter - margin && y <= nearestLedgerCenter + margin) {
+        pitchBuilder.append(getPitchBelowTreble(nearestLedgerLine, false));
+      }
+      else {
+        pitchBuilder.append(getPitchBelowTreble(y > nearestLedgerCenter ? nearestLedgerLine
+            : nearestLedgerLine - 1, true));
+      }
+    }
+    return pitchBuilder.toString();
+  }
+
+  private String getPitchAboveTreble(int ledgerLine, boolean half) {
+    String pitch = "";
+    if (ledgerLine == 0) {
+      if (half) {
+        pitch = "G5";
+      }
+      else {
+        pitch = "F5";
+      }
+    }
+    else if (ledgerLine == 1) {
+      if (half) {
+        pitch = "B5";
+      }
+      else {
+        pitch = "A5";
+      }
+    }
+    else if (ledgerLine == 2) {
+      if (half) {
+        pitch = "D6";
+      }
+      else {
+        pitch = "C6";
+      }
+    }
+    else if (ledgerLine == 3) {
+      if (half) {
+        pitch = "F6";
+      }
+      else {
+        pitch = "E6";
+      }
+    }
+    else if (ledgerLine == 4) {
+      if (half) {
+        pitch = "A6";
+      }
+      else {
+        pitch = "G6";
+      }
+    }
+    else if (ledgerLine == 5) {
+      if (half) {
+        pitch = "C7";
+      }
+      else {
+        pitch = "B6";
+      }
+    }
+    return pitch;
+  }
+  
+  private String getPitchBelowTreble(int ledgerLine, boolean half) {
+    String pitch = "";
+    if (ledgerLine == 0) {
+      if (half) {
+        pitch = "D4";
+      }
+      else {
+        pitch = "E4";
+      }
+    }
+    else if (ledgerLine == 1) {
+      if (half) {
+        pitch = "B3";
+      }
+      else {
+        pitch = "C4";
+      }
+    }
+    else if (ledgerLine == 2) {
+      if (half) {
+        pitch = "G3";
+      }
+      else {
+        pitch = "A3";
+      }
+    }
+    else if (ledgerLine == 3) {
+      if (half) {
+        pitch = "E3";
+      }
+      else {
+        pitch = "F3";
+      }
+    }
+    else if (ledgerLine == 4) {
+      if (half) {
+        pitch = "C3";
+      }
+      else {
+        pitch = "D3";
+      }
+    }
+    else if (ledgerLine == 5) {
+      if (half) {
+        pitch = "A2";
+      }
+      else {
+        pitch = "B2";
+      }
+    }
+    return pitch;
   }
 
   @Override

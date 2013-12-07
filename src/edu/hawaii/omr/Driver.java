@@ -2,6 +2,9 @@ package edu.hawaii.omr;
 
 import java.io.IOException;
 import java.util.List;
+import org.jfugue.MusicStringParser;
+import org.jfugue.MusicXmlRenderer;
+import org.jfugue.Pattern;
 import org.opencv.core.Core;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
@@ -23,7 +26,7 @@ public class Driver {
     }
     System.out.println("Going on...");
     SheetMusicMatrix image =
-        SheetMusicMatrix.readImage("YaGottaTry_1.png", Highgui.CV_LOAD_IMAGE_GRAYSCALE, false);
+        SheetMusicMatrix.readImage("Acha_1.bmp", Highgui.CV_LOAD_IMAGE_GRAYSCALE, false);
 
     // Do some image clean up
     image.close(Imgproc.MORPH_RECT, 3, 3);
@@ -54,6 +57,5 @@ public class Driver {
       }
       j++;
     }
-
   }
 }

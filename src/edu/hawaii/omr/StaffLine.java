@@ -122,6 +122,10 @@ public class StaffLine implements Cloneable {
     return this.maxY;
   }
 
+  public LineEquation getLineEquation() {
+    return this.equation;
+  }
+  
   public void addStaffLine(StaffLine line) {
     for (Point point : line.points) {
       this.addPoint(point);
