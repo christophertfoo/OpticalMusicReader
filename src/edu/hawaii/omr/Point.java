@@ -2,7 +2,7 @@ package edu.hawaii.omr;
 
 import java.util.Comparator;
 
-public class Point {
+public class Point implements Cloneable {
   private int x;
   private int y;
   
@@ -25,6 +25,11 @@ public class Point {
   
   public int getY() {
     return this.y;
+  }
+  
+  @Override
+  public Point clone() {
+    return new Point(this.x, this.y);
   }
   
   @Override
