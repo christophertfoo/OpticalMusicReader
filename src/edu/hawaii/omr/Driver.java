@@ -56,6 +56,12 @@ public class Driver {
         i++;
       }
       j++;
+    
+    NoteHeadDetection matchNoteHead = new NoteHeadDetection(info.getModeLineDistance());
+    
+    matchNoteHead.findNotes(Highgui.imread("split_23.png", Highgui.CV_LOAD_IMAGE_GRAYSCALE));
+    
+    System.out.println("Finished.");
     }
   }
 }
