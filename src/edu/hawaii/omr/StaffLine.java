@@ -123,6 +123,9 @@ public class StaffLine implements Cloneable {
   }
 
   public LineEquation getLineEquation() {
+    if(this.equation == null) {
+      this.equation = new LineEquation(this.getLeftEdgeX(), this.leftEdgeMiddleY, this.getRightEdgeX(), this.getRightEdgeMiddleY());
+    }
     return this.equation;
   }
   

@@ -1,5 +1,6 @@
 package edu.hawaii.omr;
 
+import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import org.opencv.core.Mat;
@@ -9,7 +10,7 @@ public class MeasureMatrix extends ImageMatrix {
   private final Staff staff;
   private final StaffInfo info;
   private final int offset;
-  private SortedSet<Point> noteCenters = null;
+  private List<NoteHead> noteCenters = null;
   
   public MeasureMatrix(Mat matrix, Staff staff, StaffInfo info, int offset) {
     super(matrix);
@@ -18,21 +19,21 @@ public class MeasureMatrix extends ImageMatrix {
     this.offset = offset;
   }
   
-  public SortedSet<Point> findNoteCenters() {
-    SortedSet<Point> centers = new TreeSet<>(new Point.XComparator());
-    
+  public List<NoteHead> findNoteCenters(NoteHeadDetection detector) {
+    detector.findNotes(this);
+    List<NoteHead> centers = detector.getDetectedNotes();    
     this.noteCenters = centers;
     return centers;
   }
   
-  public void getPitches(StringBuilder builder) {
+  public void getPitches(StringBuilder builder, NoteHeadDetection detector) {
     if(this.noteCenters == null) {
-      this.findNoteCenters();
+      this.findNoteCenters(detector);
     }
     
-    for(Point center : this.noteCenters) {
+    for(NoteHead center : this.noteCenters) {
       builder.append(' ');
-      builder.append(this.staff.getPitchTreble(center.getX() - this.offset, center.getY(), this.info));
+      builder.append(this.staff.getPitchTreble(center.getXCoordinate() - this.offset, center.getYCoordinate(), this.info));
     }
     builder.append(" |");
   }

@@ -129,7 +129,7 @@ public class Staff implements Cloneable {
         pitchBuilder.append("E4");
       }
     }
-    else if (y > this.topBound) {
+    else if (y < this.topBound) {
       double topCenterY = this.lines[0].getLineEquation().calculateY(x);
       int nearestLedgerLine = (int) Math.round((topCenterY - y) / lineCenterDistance);
       double nearestLedgerCenter = topCenterY - (nearestLedgerLine * lineCenterDistance);
