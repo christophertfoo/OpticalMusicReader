@@ -5,10 +5,12 @@ public class NoteHead implements Comparable<NoteHead> {
 	private int yCoordinate;
 	private int xCoordinate;
 	private static int noteWidth;
+	private String type;
 	
-	public NoteHead(int xCoordinate, int yCoordinate) {
+	public NoteHead(int xCoordinate, int yCoordinate, String type) {
 		this.xCoordinate = xCoordinate;
 		this.yCoordinate = yCoordinate;
+		this.type = type;
 	}
 
 	public boolean adjacentTo(NoteHead fromNote) {
@@ -38,6 +40,10 @@ public class NoteHead implements Comparable<NoteHead> {
 
 	public int getXCoordinate() {
 		return xCoordinate;
+	}
+	
+	public String getType(){
+		return type;
 	}
 
 

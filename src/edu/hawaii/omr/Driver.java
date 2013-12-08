@@ -57,9 +57,12 @@ public class Driver {
     }
 
     
-    NoteHeadDetection matchNoteHead = new NoteHeadDetection(info.getModeLineDistance());
+    //NoteHeadDetection matchNoteHead = new NoteHeadDetection(info.getModeLineDistance());
     
-    matchNoteHead.findNotes(Highgui.imread("split_23.png", Highgui.CV_LOAD_IMAGE_GRAYSCALE));
+   // matchNoteHead.findNotes(Highgui.imread("split_23.png", Highgui.CV_LOAD_IMAGE_GRAYSCALE));
+    
+    NoteHeadRunner matchAllNoteHead = new NoteHeadRunner(info.getModeLineDistance());
+    matchAllNoteHead.findAllNotes(Highgui.imread("split_35.png", Highgui.CV_LOAD_IMAGE_GRAYSCALE));
     
     System.out.println("Finished.");
   }
