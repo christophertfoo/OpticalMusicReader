@@ -29,9 +29,9 @@ public class MeasureMatrix extends ImageMatrix {
     int height = this.info.getModeLineDistance();
 
     
-   QuarterNoteDetection quarterNote = new QuarterNoteDetection(height);
-   HalfNoteDetection halfNote = new HalfNoteDetection(height);
-   WholeNoteDetection wholeNote = new WholeNoteDetection(height);
+   QuarterNote quarterNote = new QuarterNote(height);
+   HalfNote halfNote = new HalfNote(height);
+   WholeNote wholeNote = new WholeNote(height);
      
     Mat wholeTemplate = wholeNote.makeNoteHeadTemplate();
     Mat halfTemplate = halfNote.makeNoteHeadTemplate();
@@ -59,7 +59,7 @@ public class MeasureMatrix extends ImageMatrix {
 
           // Detected point at topleft of the template, need to move to center of the square
           int midpoint = (int) (wholeTemplate.cols() / 2.0);
-          addNoteToList(new WholeNoteDetection(x + midpoint, y + midpoint));
+          addNoteToList(new WholeNote(x + midpoint, y + midpoint));
         }
       }
     }
@@ -69,7 +69,7 @@ public class MeasureMatrix extends ImageMatrix {
 
             // Detected point at topleft of the template, need to move to center of the square
             int midpoint = (int) (halfTemplate.cols() / 2.0);
-            addNoteToList(new HalfNoteDetection(x + midpoint, y + midpoint));
+            addNoteToList(new HalfNote(x + midpoint, y + midpoint));
           }
         }
       }
@@ -79,7 +79,7 @@ public class MeasureMatrix extends ImageMatrix {
 
             // Detected point at topleft of the template, need to move to center of the square
             int midpoint = (int) (quarterTemplate.cols() / 2.0);
-            addNoteToList(new QuarterNoteDetection(x + midpoint, y + midpoint));
+            addNoteToList(new QuarterNote(x + midpoint, y + midpoint));
           }
         }
       }

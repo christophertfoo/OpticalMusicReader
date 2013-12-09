@@ -3,20 +3,20 @@ package edu.hawaii.omr;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
-public class WholeNoteDetection extends NoteHead {
+public class WholeNote extends NoteHead {
 
 	private double angle = 0;
 	private double height;
 	public final double threshold = 0.50;
 	
-	public WholeNoteDetection(int xCoordinate, int yCoordinate){
+	public WholeNote(int xCoordinate, int yCoordinate){
 		super.xCoordinate = xCoordinate;
 		super.yCoordinate = yCoordinate;
 		super.type = "Whole";
 
 	}
 
-	public WholeNoteDetection(int height){
+	public WholeNote(int height){
 		this.height = height;
 			}
 	

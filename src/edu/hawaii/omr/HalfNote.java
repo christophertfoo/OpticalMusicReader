@@ -3,7 +3,7 @@ package edu.hawaii.omr;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
-public class HalfNoteDetection extends NoteHead{
+public class HalfNote extends NoteHead{
 	private double angle = Math.PI/6; // 30 degrees
 	private double height;
 	public final double threshold = 0.60;
@@ -14,13 +14,13 @@ public class HalfNoteDetection extends NoteHead{
 //
 //	}
 	
-	public HalfNoteDetection(int xCoordinate, int yCoordinate){
+	public HalfNote(int xCoordinate, int yCoordinate){
 		super.xCoordinate = xCoordinate;
 		super.yCoordinate = yCoordinate;
 		super.type = "Half";
 	}
 	
-	public HalfNoteDetection(int height){
+	public HalfNote(int height){
 		this.height = height;
 	}
 

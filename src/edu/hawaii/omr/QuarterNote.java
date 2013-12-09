@@ -3,19 +3,19 @@ package edu.hawaii.omr;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
-public class QuarterNoteDetection extends NoteHead {
+public class QuarterNote extends NoteHead {
 	private double angle = Math.PI/6; // 30 degrees
 	private double height;
 	public final double threshold = 0.67;
 	
-	public QuarterNoteDetection(int xCoordinate, int yCoordinate){
+	public QuarterNote(int xCoordinate, int yCoordinate){
 		super.xCoordinate = xCoordinate;
 		super.yCoordinate = yCoordinate;
 		super.type = "Quarter";
 
 	}
 	
-	public QuarterNoteDetection(int height){
+	public QuarterNote(int height){
 		this.height = height;
 	}
 
