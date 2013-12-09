@@ -52,7 +52,7 @@ public class StaffMatrix extends ImageMatrix {
   }
 
   public ImageMatrix getNoLineImage() {
-    return this.subtractImagePreserve(this.getStaffLineImage(), false);
+    return this.subtractImagePreserve(this.getStaffLineImage(), true);
   }
 
   public ImageMatrix getMeasureLineImage() {

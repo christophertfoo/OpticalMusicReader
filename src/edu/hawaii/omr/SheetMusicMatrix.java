@@ -330,6 +330,10 @@ public class SheetMusicMatrix extends ImageMatrix {
   public void mergeStaffs() {
     this.mergeConnectedStaffs();
     this.mergeSeparatedStaffs();
+    for(Staff staff: this.staffs) {
+      int endX = this.cols() - 1;
+      staff.extend(0, endX);
+    }
   }
 
   public List<StaffMatrix> splitImage() {
