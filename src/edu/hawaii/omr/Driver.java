@@ -27,7 +27,7 @@ public class Driver {
     }
     System.out.println("Going on...");
     SheetMusicMatrix image =
-        SheetMusicMatrix.readImage("YaGottaTry_1.png", Highgui.CV_LOAD_IMAGE_GRAYSCALE, false);
+        SheetMusicMatrix.readImage("synthetic.bmp", Highgui.CV_LOAD_IMAGE_GRAYSCALE, false);
 
     // Do some image clean up
     image.close(Imgproc.MORPH_RECT, 3, 3);

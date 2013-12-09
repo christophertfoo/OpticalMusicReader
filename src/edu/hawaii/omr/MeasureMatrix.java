@@ -28,20 +28,26 @@ public class MeasureMatrix extends ImageMatrix {
 
     int height = this.info.getModeLineDistance();
 
-    if (NoteHead.template == null) {
-      NoteHead.makeNoteHeadTemplate(height);
-    }
+    
+   QuarterNoteDetection quarterNote = new QuarterNoteDetection(height);
+   HalfNoteDetection halfNote = new HalfNoteDetection(height);
+   WholeNoteDetection wholeNote = new WholeNoteDetection(height);
+     
+    Mat wholeTemplate = wholeNote.makeNoteHeadTemplate();
+    Mat halfTemplate = halfNote.makeNoteHeadTemplate();
+    Mat quarterTemplate = quarterNote.makeNoteHeadTemplate();
 
-    Mat template = NoteHead.template;
+    int result_cols = this.cols() - wholeTemplate.cols() + 1;
+    int result_rows = this.rows() - wholeTemplate.rows() + 1;
+    Mat wholeResult = new Mat(result_cols, result_rows, CvType.CV_32F);
+    Mat halfResult = new Mat(result_cols, result_rows, CvType.CV_32F);
+    Mat quarterResult = new Mat(result_cols, result_rows, CvType.CV_32F);
 
-    int result_cols = this.cols() - NoteHead.template.cols() + 1;
-    int result_rows = this.rows() - template.rows() + 1;
-    Mat result = new Mat(result_cols, result_rows, CvType.CV_32F);
-
-    List<NoteHead> falseNotes = new ArrayList<>();
     this.noteCenters = new ArrayList<>();
 
-    Imgproc.matchTemplate(this, template, result, Imgproc.TM_CCOEFF_NORMED);
+    Imgproc.matchTemplate(this, wholeTemplate, wholeResult, Imgproc.TM_CCOEFF_NORMED);
+    Imgproc.matchTemplate(this, halfTemplate, halfResult, Imgproc.TM_CCOEFF_NORMED);
+    Imgproc.matchTemplate(this, quarterTemplate, quarterResult, Imgproc.TM_CCOEFF_NORMED);
     // Core.normalize(result, result, 0, 1, Core.NORM_MINMAX, -1, new Mat()); //use if need to
     // normalize
 
@@ -49,49 +55,53 @@ public class MeasureMatrix extends ImageMatrix {
 
     for (int y = 0; y < result_rows; y++) {
       for (int x = 0; x < result_cols; x++) {
-        if (result.get(y, x)[0] > NoteHead.templateThreshold) {
+        if (wholeResult.get(y, x)[0] > wholeNote.threshold) {
 
           // Detected point at topleft of the template, need to move to center of the square
-          int midpoint = (int) (template.cols() / 2.0);
-          addNoteToList(new NoteHead(x + midpoint, y + midpoint), falseNotes);
+          int midpoint = (int) (wholeTemplate.cols() / 2.0);
+          addNoteToList(new WholeNoteDetection(x + midpoint, y + midpoint));
         }
       }
     }
+    for (int y = 0; y < result_rows; y++) {
+        for (int x = 0; x < result_cols; x++) {
+          if (halfResult.get(y, x)[0] > halfNote.threshold) {
 
-    Collections.sort(this.noteCenters);
-  }
-
-  private void addNoteToList(NoteHead input, List<NoteHead> falseNotes) {
-    if (this.noteCenters.size() == 0) {
-      this.noteCenters.add(input);
-    }
-
-    else {
-      boolean checkFalseNotes = true;
-      boolean addToDetectedNotes = true;
-
-      for (int i = 0; i < this.noteCenters.size(); i++) {
-        if (input.adjacentTo(this.noteCenters.get(i))) {
-          falseNotes.add(input);
-          checkFalseNotes = false;
-          addToDetectedNotes = false;
+            // Detected point at topleft of the template, need to move to center of the square
+            int midpoint = (int) (halfTemplate.cols() / 2.0);
+            addNoteToList(new HalfNoteDetection(x + midpoint, y + midpoint));
+          }
         }
       }
+    for (int y = 0; y < result_rows; y++) {
+        for (int x = 0; x < result_cols; x++) {
+          if (quarterResult.get(y, x)[0] > quarterNote.threshold) {
 
-      if (checkFalseNotes == true) {
-        int counter = falseNotes.size();
-        for (int i = 0; i < counter; i++) {
-          if (input.adjacentTo(falseNotes.get(i))) {
-            falseNotes.add(input);
-            addToDetectedNotes = false;
+            // Detected point at topleft of the template, need to move to center of the square
+            int midpoint = (int) (quarterTemplate.cols() / 2.0);
+            addNoteToList(new QuarterNoteDetection(x + midpoint, y + midpoint));
           }
         }
       }
 
-      if (addToDetectedNotes == true) {
-        this.noteCenters.add(input);
-      }
-    }
+   
+    Collections.sort(this.noteCenters);
+  }
+
+  private void addNoteToList(NoteHead input) {
+  
+	 boolean isAdjacent = false;
+	 for(int i=0; i<this.noteCenters.size(); i++){
+		 if(input.adjacentTo(this.noteCenters.get(i))){
+			 isAdjacent = true;
+		 }
+	 }
+	 
+	 if(isAdjacent == false){
+		 this.noteCenters.add(input);
+	 }
+    
+    
   }
 
   public void getPitches(StringBuilder builder) {
@@ -123,12 +133,22 @@ public class MeasureMatrix extends ImageMatrix {
     for (NoteHead center : this.noteCenters) {
 
       matchLoc = new Point(center.getXCoordinate(), center.getYCoordinate());
+ 
       // Make a box
       // Point boxPoint = new Point(matchLoc.x + template.cols(), matchLoc.y + template.rows());
 
       // Makes a point
       Point boxPoint = new Point(matchLoc.x, matchLoc.y);
-      Core.rectangle(image, matchLoc, boxPoint, new Scalar(255, 0, 0));
+      if(center.getType().equals("Whole")){
+    	  Core.rectangle(image, matchLoc, boxPoint, new Scalar(255, 0, 0)); // blue
+      }
+      else if(center.getType().equals("Half")){
+    	  Core.rectangle(image, matchLoc, boxPoint, new Scalar(0, 255, 0)); // green
+      }
+      else if(center.getType().equals("Quarter")){
+    	  Core.rectangle(image, matchLoc, boxPoint, new Scalar(0, 0, 255)); // red
+      }
+    
     }
     
     return image;
