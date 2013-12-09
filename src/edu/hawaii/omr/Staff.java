@@ -9,6 +9,7 @@ public class Staff implements Cloneable {
   private int rightBound;
   private int topBound;
   private int bottomBound;
+  private int horizontalCoverage;
 
   public Staff(int topBound, int bottomBound, int leftBound, int rightBound) {
     this.topBound = topBound;
@@ -88,6 +89,10 @@ public class Staff implements Cloneable {
     return this.rightBound;
   }
 
+  public int getHorizontalCoverage() {
+    return this.horizontalCoverage;
+  }
+  
   public String getPitchTreble(double x, double y, StaffInfo info) {
     StringBuilder pitchBuilder = new StringBuilder();
     double halfLineHeight = info.getModeLineHeight() / 2.0;
@@ -278,29 +283,41 @@ public class Staff implements Cloneable {
   }
 
   private void setXBounds() {
-    int lineValue;
+    int leftValue;
+    int rightValue;
+    int lengthValue;
     int leftX = -1;
     int rightX = -1;
+    int length = -1;
     for (StaffLine line : this.lines) {
-      lineValue = line.getLeftEdgeX();
+      leftValue = line.getLeftEdgeX();
       if (leftX == -1) {
-        leftX = lineValue;
+        leftX = leftValue;
       }
-      else if (leftX > lineValue) {
-        leftX = lineValue;
+      else if (leftX > leftValue) {
+        leftX = leftValue;
       }
 
-      lineValue = line.getRightEdgeX();
+      rightValue = line.getRightEdgeX();
       if (rightX == -1) {
-        rightX = lineValue;
+        rightX = rightValue;
       }
-      else if (rightX < lineValue) {
-        rightX = lineValue;
+      else if (rightX < rightValue) {
+        rightX = rightValue;
+      }
+      
+      lengthValue = line.getHorizontalCoverage();
+      if(length == -1) {
+        length = lengthValue;
+      }
+      else if(length > lengthValue) {
+        length = lengthValue;
       }
     }
 
     this.leftBound = leftX;
     this.rightBound = rightX;
+    this.horizontalCoverage = length;
   }
 
   private void setYBounds() {
@@ -366,6 +383,5 @@ public class Staff implements Cloneable {
       difference = o1.rightBound - o2.rightBound;
       return difference;
     }
-
   }
 }

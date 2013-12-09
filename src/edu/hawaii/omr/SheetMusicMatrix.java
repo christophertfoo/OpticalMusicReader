@@ -307,15 +307,18 @@ public class SheetMusicMatrix extends ImageMatrix {
                 Integer.MAX_VALUE, bottom + margin + 1, Integer.MAX_VALUE, Integer.MAX_VALUE));
         inRange.addAll(bottomRange);
         inRange.removeAll(checked);
+        
         Iterator<Staff> iterator = inRange.iterator();
         if (iterator.hasNext()) {
           Staff seed = iterator.next();
-          int horizontalCoverage = seed.getRightBound() - seed.getLeftBound() + 1;
+          int horizontalCoverage = seed.getHorizontalCoverage();
           while (iterator.hasNext()) {
             Staff next = iterator.next();
-            horizontalCoverage += next.getRightBound() - next.getLeftBound() + 1;
+            horizontalCoverage += next.getHorizontalCoverage();
             seed.addStaff(next);
+            seed.setBounds();
           }
+
           if (horizontalCoverage >= minStaffWidth) {
             results.add(seed);
           }
