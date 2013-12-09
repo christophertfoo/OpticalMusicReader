@@ -45,9 +45,9 @@ public class MeasureMatrix extends ImageMatrix {
 
     this.noteCenters = new ArrayList<>();
 
-    Imgproc.matchTemplate(this, wholeTemplate, wholeResult, Imgproc.TM_CCOEFF_NORMED);
-    Imgproc.matchTemplate(this, halfTemplate, halfResult, Imgproc.TM_CCOEFF_NORMED);
-    Imgproc.matchTemplate(this, quarterTemplate, quarterResult, Imgproc.TM_CCOEFF_NORMED);
+    Imgproc.matchTemplate(this, wholeTemplate, wholeResult, Imgproc.TM_SQDIFF_NORMED);
+    Imgproc.matchTemplate(this, halfTemplate, halfResult, Imgproc.TM_SQDIFF_NORMED);
+    Imgproc.matchTemplate(this, quarterTemplate, quarterResult, Imgproc.TM_SQDIFF_NORMED);
     // Core.normalize(result, result, 0, 1, Core.NORM_MINMAX, -1, new Mat()); //use if need to
     // normalize
 
@@ -55,7 +55,7 @@ public class MeasureMatrix extends ImageMatrix {
 
     for (int y = 0; y < result_rows; y++) {
       for (int x = 0; x < result_cols; x++) {
-        if (wholeResult.get(y, x)[0] > wholeNote.threshold) {
+        if (wholeResult.get(y, x)[0] < wholeNote.threshold) {
 
           // Detected point at topleft of the template, need to move to center of the square
           int midpoint = (int) (wholeTemplate.cols() / 2.0);
@@ -65,7 +65,7 @@ public class MeasureMatrix extends ImageMatrix {
     }
     for (int y = 0; y < result_rows; y++) {
         for (int x = 0; x < result_cols; x++) {
-          if (halfResult.get(y, x)[0] > halfNote.threshold) {
+          if (halfResult.get(y, x)[0] < halfNote.threshold) {
 
             // Detected point at topleft of the template, need to move to center of the square
             int midpoint = (int) (halfTemplate.cols() / 2.0);
@@ -75,7 +75,7 @@ public class MeasureMatrix extends ImageMatrix {
       }
     for (int y = 0; y < result_rows; y++) {
         for (int x = 0; x < result_cols; x++) {
-          if (quarterResult.get(y, x)[0] > quarterNote.threshold) {
+          if (quarterResult.get(y, x)[0] < quarterNote.threshold) {
 
             // Detected point at topleft of the template, need to move to center of the square
             int midpoint = (int) (quarterTemplate.cols() / 2.0);

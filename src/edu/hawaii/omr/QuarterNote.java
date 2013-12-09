@@ -6,7 +6,7 @@ import org.opencv.core.Mat;
 public class QuarterNote extends NoteHead {
 	private double angle = Math.PI/6; // 30 degrees
 	private double height;
-	public final double threshold = 0.67;
+	public final double threshold = 0.40;
 	
 	public QuarterNote(int xCoordinate, int yCoordinate){
 		super.xCoordinate = xCoordinate;

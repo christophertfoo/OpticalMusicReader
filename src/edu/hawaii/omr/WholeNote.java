@@ -7,7 +7,7 @@ public class WholeNote extends NoteHead {
 
 	private double angle = 0;
 	private double height;
-	public final double threshold = 0.50;
+	public final double threshold = 0.60;
 	
 	public WholeNote(int xCoordinate, int yCoordinate){
 		super.xCoordinate = xCoordinate;
