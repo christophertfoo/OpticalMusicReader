@@ -1,5 +1,7 @@
 package edu.hawaii.omr;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import org.opencv.core.Core;
@@ -25,7 +27,7 @@ public class StaffLine implements Cloneable {
 
   private int minY = -1;
   private int maxY = -1;
-  
+
   private LineEquation equation = null;
 
   public StaffLine() {
@@ -47,7 +49,7 @@ public class StaffLine implements Cloneable {
 
     this.minY = -1;
     this.maxY = -1;
-    
+
     this.equation = null;
   }
 
@@ -64,9 +66,9 @@ public class StaffLine implements Cloneable {
     }
     return this.leftEdgeTopY;
   }
-  
+
   public double getLeftEdgeMiddleY() {
-    if(Double.compare(this.leftEdgeMiddleY, -1) == 0) {
+    if (Double.compare(this.leftEdgeMiddleY, -1) == 0) {
       this.setBounds();
     }
     return this.leftEdgeMiddleY;
@@ -87,12 +89,12 @@ public class StaffLine implements Cloneable {
   }
 
   public double getRightEdgeMiddleY() {
-    if(Double.compare(this.rightEdgeMiddleY, -1) == 0) {
+    if (Double.compare(this.rightEdgeMiddleY, -1) == 0) {
       this.setBounds();
     }
     return this.rightEdgeMiddleY;
   }
-  
+
   public int getRightEdgeTopY() {
     if (this.rightEdgeTopY == -1) {
       this.setBounds();
@@ -120,6 +122,23 @@ public class StaffLine implements Cloneable {
     }
 
     return this.maxY;
+  }
+
+  public int getHorizontalCoverage() {
+    Set<Integer> xCoordinates = new HashSet<>();
+    for(Point point : this.points) {
+      xCoordinates.add(point.getX());
+    }
+    return xCoordinates.size();
+  }
+  
+  public LineEquation getLineEquation() {
+    if (this.equation == null) {
+      this.equation =
+          new LineEquation(this.getLeftEdgeX(), this.leftEdgeMiddleY, this.getRightEdgeX(),
+              this.getRightEdgeMiddleY());
+    }
+    return this.equation;
   }
 
   public void addStaffLine(StaffLine line) {
@@ -163,32 +182,34 @@ public class StaffLine implements Cloneable {
     int leftX = this.getLeftEdgeX();
     int rightX = this.getRightEdgeX();
     int height =
-        (int) Math
-            .ceil((info.getModeLineHeight(modeThreshold).getUpperBound()) / 2.0) + lineHeightAdjustment;
+        (int) Math.ceil((info.getModeLineHeight(modeThreshold).getUpperBound()) / 2.0)
+            + lineHeightAdjustment;
     if (leftX == rightX) {
       for (Point point : this.points) {
         image.put(point.getY(), point.getX(), 255);
       }
     }
     else {
-      Core.line(image, new org.opencv.core.Point(leftX, this.getLeftEdgeMiddleY()), new org.opencv.core.Point(
-          rightX, this.getRightEdgeMiddleY()), new Scalar(255), height);
+      Core.line(image, new org.opencv.core.Point(leftX, this.getLeftEdgeMiddleY()),
+          new org.opencv.core.Point(rightX, this.getRightEdgeMiddleY()), new Scalar(255), height);
     }
   }
 
   public boolean contains(Point point) {
     return this.points.contains(point);
   }
-  
+
   public boolean contains(Point point, StaffInfo info) {
     return this.contains(point.getX(), point.getY(), info);
   }
-  
+
   public boolean contains(double x, double y, StaffInfo info) {
-    if(this.equation == null) {
-      this.equation = new LineEquation(this.getLeftEdgeX(), this.leftEdgeMiddleY, this.getRightEdgeX(), this.getRightEdgeMiddleY());
+    if (this.equation == null) {
+      this.equation =
+          new LineEquation(this.getLeftEdgeX(), this.leftEdgeMiddleY, this.getRightEdgeX(),
+              this.getRightEdgeMiddleY());
     }
-    
+
     double margin = Math.ceil(info.getModeLineHeight(modeThreshold).getUpperBound() / 2.0);
     double lineValue = this.equation.calculateY(x);
     return y >= lineValue - margin && y <= lineValue + margin;
