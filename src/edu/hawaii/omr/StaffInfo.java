@@ -101,15 +101,15 @@ public class StaffInfo {
   }
 
   public int getModeStaffHeight() {
-    if(this.staffHeightMode == -1) {
-      if(this.staffHeightFreq == null) {
+    if (this.staffHeightMode == -1) {
+      if (this.staffHeightFreq == null) {
         this.staffHeightFreq = this.getFrequencyMap(this.staffHeights);
       }
       this.staffHeightMode = this.getMode(this.staffHeightFreq);
     }
     return this.staffHeightMode;
   }
-  
+
   public void addStaffInfo(StaffInfo info) {
     for (int distance : info.lineDistances) {
       this.addLineDistance(distance);
@@ -117,8 +117,8 @@ public class StaffInfo {
     for (int height : info.lineHeights) {
       this.addLineHeight(height);
     }
-    
-    for(int height : info.staffHeights) {
+
+    for (int height : info.staffHeights) {
       this.addStaffHeight(height);
     }
   }

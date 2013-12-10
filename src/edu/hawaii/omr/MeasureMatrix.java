@@ -28,11 +28,10 @@ public class MeasureMatrix extends ImageMatrix {
 
     int height = this.info.getModeLineDistance();
 
-    
-   QuarterNote quarterNote = new QuarterNote(height);
-   HalfNote halfNote = new HalfNote(height);
-   WholeNote wholeNote = new WholeNote(height);
-     
+    QuarterNote quarterNote = new QuarterNote(height);
+    HalfNote halfNote = new HalfNote(height);
+    WholeNote wholeNote = new WholeNote(height);
+
     Mat wholeTemplate = wholeNote.makeNoteHeadTemplate();
     Mat halfTemplate = halfNote.makeNoteHeadTemplate();
     Mat quarterTemplate = quarterNote.makeNoteHeadTemplate();
@@ -64,44 +63,42 @@ public class MeasureMatrix extends ImageMatrix {
       }
     }
     for (int y = 0; y < result_rows; y++) {
-        for (int x = 0; x < result_cols; x++) {
-          if (halfResult.get(y, x)[0] < halfNote.threshold) {
+      for (int x = 0; x < result_cols; x++) {
+        if (halfResult.get(y, x)[0] < halfNote.threshold) {
 
-            // Detected point at topleft of the template, need to move to center of the square
-            int midpoint = (int) (halfTemplate.cols() / 2.0);
-            addNoteToList(new HalfNote(x + midpoint, y + midpoint));
-          }
+          // Detected point at topleft of the template, need to move to center of the square
+          int midpoint = (int) (halfTemplate.cols() / 2.0);
+          addNoteToList(new HalfNote(x + midpoint, y + midpoint));
         }
       }
+    }
     for (int y = 0; y < result_rows; y++) {
-        for (int x = 0; x < result_cols; x++) {
-          if (quarterResult.get(y, x)[0] < quarterNote.threshold) {
+      for (int x = 0; x < result_cols; x++) {
+        if (quarterResult.get(y, x)[0] < quarterNote.threshold) {
 
-            // Detected point at topleft of the template, need to move to center of the square
-            int midpoint = (int) (quarterTemplate.cols() / 2.0);
-            addNoteToList(new QuarterNote(x + midpoint, y + midpoint));
-          }
+          // Detected point at topleft of the template, need to move to center of the square
+          int midpoint = (int) (quarterTemplate.cols() / 2.0);
+          addNoteToList(new QuarterNote(x + midpoint, y + midpoint));
         }
       }
+    }
 
-   
     Collections.sort(this.noteCenters);
   }
 
   private void addNoteToList(NoteHead input) {
-  
-	 boolean isAdjacent = false;
-	 for(int i=0; i<this.noteCenters.size(); i++){
-		 if(input.adjacentTo(this.noteCenters.get(i))){
-			 isAdjacent = true;
-		 }
-	 }
-	 
-	 if(isAdjacent == false){
-		 this.noteCenters.add(input);
-	 }
-    
-    
+
+    boolean isAdjacent = false;
+    for (int i = 0; i < this.noteCenters.size(); i++) {
+      if (input.adjacentTo(this.noteCenters.get(i))) {
+        isAdjacent = true;
+      }
+    }
+
+    if (isAdjacent == false) {
+      this.noteCenters.add(input);
+    }
+
   }
 
   public void getPitches(StringBuilder builder) {
@@ -127,30 +124,30 @@ public class MeasureMatrix extends ImageMatrix {
     Imgproc.cvtColor(this, image_rgb, Imgproc.COLOR_GRAY2RGB);
     ImageMatrix image = new ImageMatrix(image_rgb);
     image_rgb = null;
-    
+
     Point matchLoc;
 
     for (NoteHead center : this.noteCenters) {
 
       matchLoc = new Point(center.getXCoordinate(), center.getYCoordinate());
- 
+
       // Make a box
       // Point boxPoint = new Point(matchLoc.x + template.cols(), matchLoc.y + template.rows());
 
       // Makes a point
       Point boxPoint = new Point(matchLoc.x, matchLoc.y);
-      if(center.getType().equals("Whole")){
-    	  Core.rectangle(image, matchLoc, boxPoint, new Scalar(255, 0, 0)); // blue
+      if (center.getType().equals("Whole")) {
+        Core.rectangle(image, matchLoc, boxPoint, new Scalar(255, 0, 0)); // blue
       }
-      else if(center.getType().equals("Half")){
-    	  Core.rectangle(image, matchLoc, boxPoint, new Scalar(0, 255, 0)); // green
+      else if (center.getType().equals("Half")) {
+        Core.rectangle(image, matchLoc, boxPoint, new Scalar(0, 255, 0)); // green
       }
-      else if(center.getType().equals("Quarter")){
-    	  Core.rectangle(image, matchLoc, boxPoint, new Scalar(0, 0, 255)); // red
+      else if (center.getType().equals("Quarter")) {
+        Core.rectangle(image, matchLoc, boxPoint, new Scalar(0, 0, 255)); // red
       }
-    
+
     }
-    
+
     return image;
   }
 

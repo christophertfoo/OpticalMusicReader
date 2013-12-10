@@ -7,8 +7,8 @@ import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
 public class ImageMatrix extends Mat {
-  
-  protected boolean isBinary = false;  
+
+  protected boolean isBinary = false;
   protected boolean hasWhiteForeground = false;
 
   public ImageMatrix(Mat matrix) {
@@ -29,10 +29,10 @@ public class ImageMatrix extends Mat {
   }
 
   public ImageMatrix close(int elementType, int width, int height) {
-    if(!this.isBinary) {
+    if (!this.isBinary) {
       this.makeBinary();
     }
-    if(!this.hasWhiteForeground) {
+    if (!this.hasWhiteForeground) {
       this.invert();
     }
     Mat structuringElement = Imgproc.getStructuringElement(elementType, new Size(width, height));
@@ -43,10 +43,10 @@ public class ImageMatrix extends Mat {
   }
 
   public ImageMatrix open(int elementType, int width, int height) {
-    if(!this.isBinary) {
+    if (!this.isBinary) {
       this.makeBinary();
     }
-    if(!this.hasWhiteForeground) {
+    if (!this.hasWhiteForeground) {
       this.invert();
     }
     Mat structuringElement = Imgproc.getStructuringElement(elementType, new Size(width, height));
@@ -112,7 +112,6 @@ public class ImageMatrix extends Mat {
     for (int i = 0; i < numChannels; i++) {
       backgroundValues[i] = 0;
     }
-
 
     for (int y = 0, height = this.rows(); y < height; y++) {
       for (int x = 0, width = this.width(); x < width; x++) {
@@ -194,5 +193,5 @@ public class ImageMatrix extends Mat {
     image.hasWhiteForeground = whiteForeground;
     return image;
   }
-  
+
 }
