@@ -5,15 +5,18 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 
 public class StaffLine implements Cloneable {
 
-  private static final Point.XComparator xComparator = new Point.XComparator();
+  private static final OmrPoint.XComparator xComparator = new OmrPoint.XComparator();
   private static final int lineHeightAdjustment = 2;
   private static final double modeThreshold = 0.33;
 
-  private SortedSet<Point> points;
+  private SortedSet<OmrPoint> points;
 
   private int leftEdgeX = -1;
   private int leftEdgeTopY = -1;
@@ -34,7 +37,7 @@ public class StaffLine implements Cloneable {
     this.points = new TreeSet<>(xComparator);
   }
 
-  public void addPoint(Point point) {
+  public void addPoint(OmrPoint point) {
     this.points.add(point);
 
     this.leftEdgeX = -1;
@@ -126,23 +129,28 @@ public class StaffLine implements Cloneable {
 
   public int getHorizontalCoverage() {
     Set<Integer> xCoordinates = new HashSet<>();
-    for(Point point : this.points) {
-      xCoordinates.add(point.getX());
+    for (OmrPoint point : this.points) {
+      xCoordinates.add((int) point.x);
     }
     return xCoordinates.size();
   }
-  
+
   public LineEquation getLineEquation() {
     if (this.equation == null) {
+      Mat line = new Mat();
+      Imgproc.fitLine(new MatOfPoint2f(this.points.toArray(new OmrPoint[0])), line,
+          Imgproc.CV_DIST_L2, 0, 1, 0.1);
       this.equation =
-          new LineEquation(this.getLeftEdgeX(), this.leftEdgeMiddleY, this.getRightEdgeX(),
-              this.getRightEdgeMiddleY());
+          new LineEquation(line.get(2, 0)[0], line.get(3, 0)[0], line.get(2, 0)[0]
+              + line.get(0, 0)[0], line.get(3, 0)[0] + line.get(1, 0)[0]);
+      // new LineEquation(this.getLeftEdgeX(), this.leftEdgeMiddleY, this.getRightEdgeX(),
+      // this.getRightEdgeMiddleY());
     }
     return this.equation;
   }
 
   public void addStaffLine(StaffLine line) {
-    for (Point point : line.points) {
+    for (OmrPoint point : line.points) {
       this.addPoint(point);
     }
   }
@@ -150,14 +158,14 @@ public class StaffLine implements Cloneable {
   public void translateVertically(int amount) {
 
     // Keep pointer to old set of points
-    SortedSet<Point> points = this.points;
+    SortedSet<OmrPoint> points = this.points;
 
     // Reset the point sets / maps
     this.points = new TreeSet<>(xComparator);
 
     // Re-add the translated points
-    for (Point point : points) {
-      this.addPoint(new Point(point.getX(), point.getY() + amount));
+    for (OmrPoint point : points) {
+      this.addPoint(new OmrPoint((int) point.x, (int) point.y + amount));
     }
   }
 
@@ -168,8 +176,8 @@ public class StaffLine implements Cloneable {
     int rightX = this.getRightEdgeX();
     int height = this.getMaxY() - this.getMinY();
     if (leftX == rightX) {
-      for (Point point : this.points) {
-        image.put(point.getY(), point.getX(), 255);
+      for (OmrPoint point : this.points) {
+        image.put((int) point.y, (int) point.x, 255);
       }
     }
     else {
@@ -185,8 +193,8 @@ public class StaffLine implements Cloneable {
         (int) Math.ceil((info.getModeLineHeight(modeThreshold).getUpperBound()) / 2.0)
             + lineHeightAdjustment;
     if (leftX == rightX) {
-      for (Point point : this.points) {
-        image.put(point.getY(), point.getX(), 255);
+      for (OmrPoint point : this.points) {
+        image.put((int) point.y, (int) point.x, 255);
       }
     }
     else {
@@ -195,12 +203,12 @@ public class StaffLine implements Cloneable {
     }
   }
 
-  public boolean contains(Point point) {
+  public boolean contains(OmrPoint point) {
     return this.points.contains(point);
   }
 
-  public boolean contains(Point point, StaffInfo info) {
-    return this.contains(point.getX(), point.getY(), info);
+  public boolean contains(OmrPoint point, StaffInfo info) {
+    return this.contains(point.x, point.y, info);
   }
 
   public boolean contains(double x, double y, StaffInfo info) {
@@ -215,36 +223,41 @@ public class StaffLine implements Cloneable {
     return y >= lineValue - margin && y <= lineValue + margin;
   }
 
+  public MatOfPoint2f toMatOfPoint() {
+    MatOfPoint2f mat = new MatOfPoint2f(this.points.toArray(new OmrPoint[0]));
+    return mat;
+  }
+
   @Override
   public StaffLine clone() {
     StaffLine clone = new StaffLine();
-    for (Point point : this.points) {
-      clone.addPoint(new Point(point.getX(), point.getY()));
+    for (OmrPoint point : this.points) {
+      clone.addPoint(new OmrPoint((int) point.x, (int) point.y));
     }
     return clone;
   }
 
   private void setBounds() {
-    this.leftEdgeX = this.points.first().getX();
-    this.rightEdgeX = this.points.last().getX();
+    this.leftEdgeX = (int) this.points.first().x;
+    this.rightEdgeX = (int) this.points.last().x;
 
     SortedSet<Integer> rows = new TreeSet<Integer>();
-    for (Point point : this.points) {
-      rows.add(point.getY());
+    for (OmrPoint point : this.points) {
+      rows.add((int) point.y);
     }
     this.minY = rows.first();
     this.maxY = rows.last();
 
-    SortedSet<Point> leftColumn =
-        this.points.subSet(new Point(this.leftEdgeX, 0), new Point(this.leftEdgeX + 1, 0));
-    this.leftEdgeTopY = leftColumn.first().getY();
-    this.leftEdgeBottomY = leftColumn.last().getY();
+    SortedSet<OmrPoint> leftColumn =
+        this.points.subSet(new OmrPoint(this.leftEdgeX, 0), new OmrPoint(this.leftEdgeX + 1, 0));
+    this.leftEdgeTopY = (int) leftColumn.first().y;
+    this.leftEdgeBottomY = (int) leftColumn.last().y;
     this.leftEdgeMiddleY = (this.leftEdgeTopY + this.leftEdgeBottomY) / 2.0;
 
-    SortedSet<Point> rightColumn =
-        this.points.subSet(new Point(this.rightEdgeX, 0), new Point(this.rightEdgeX + 1, 0));
-    this.rightEdgeTopY = rightColumn.first().getY();
-    this.rightEdgeBottomY = rightColumn.last().getY();
+    SortedSet<OmrPoint> rightColumn =
+        this.points.subSet(new OmrPoint(this.rightEdgeX, 0), new OmrPoint(this.rightEdgeX + 1, 0));
+    this.rightEdgeTopY = (int) rightColumn.first().y;
+    this.rightEdgeBottomY = (int) rightColumn.last().y;
     this.rightEdgeMiddleY = (this.rightEdgeTopY + this.rightEdgeBottomY) / 2.0;
   }
 }

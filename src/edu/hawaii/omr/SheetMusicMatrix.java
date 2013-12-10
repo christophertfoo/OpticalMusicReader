@@ -19,7 +19,7 @@ import org.opencv.highgui.Highgui;
 public class SheetMusicMatrix extends ImageMatrix {
 
   private static final double modeThreshold = 0.33;
-  private static final double staffWidthThreshold = 0.5;
+  private static final double staffWidthThreshold = 0.4;
 
   private static final Staff.TopComparator staffComparator = new Staff.TopComparator();
   private static final Staff.BottomComparator bottomComparator = new Staff.BottomComparator();
@@ -108,7 +108,7 @@ public class SheetMusicMatrix extends ImageMatrix {
           }
           else {
             for (int j = 0; j < lineHeight; j++) {
-              line1.addPoint(new Point(x, temp++));
+              line1.addPoint(new OmrPoint(x, temp++));
             }
 
             // Check first gap
@@ -129,7 +129,7 @@ public class SheetMusicMatrix extends ImageMatrix {
           else {
             line2 = new StaffLine();
             for (int j = 0; j < lineHeight; j++) {
-              line2.addPoint(new Point(x, temp++));
+              line2.addPoint(new OmrPoint(x, temp++));
             }
 
             // Check second gap
@@ -150,7 +150,7 @@ public class SheetMusicMatrix extends ImageMatrix {
           else {
             line3 = new StaffLine();
             for (int j = 0; j < lineHeight; j++) {
-              line3.addPoint(new Point(x, temp++));
+              line3.addPoint(new OmrPoint(x, temp++));
             }
 
             // Check third gap
@@ -171,7 +171,7 @@ public class SheetMusicMatrix extends ImageMatrix {
           else {
             line4 = new StaffLine();
             for (int j = 0; j < lineHeight; j++) {
-              line4.addPoint(new Point(x, temp++));
+              line4.addPoint(new OmrPoint(x, temp++));
             }
 
             // Check fourth gap
@@ -192,7 +192,7 @@ public class SheetMusicMatrix extends ImageMatrix {
           else {
             line5 = new StaffLine();
             for (int j = 0; j < lineHeight; j++) {
-              line5.addPoint(new Point(x, temp++));
+              line5.addPoint(new OmrPoint(x, temp++));
             }
 
             Staff staff = new Staff(line1, line2, line3, line4, line5);
@@ -256,22 +256,22 @@ public class SheetMusicMatrix extends ImageMatrix {
     }
     ConnectedComponentFinder finder = new ConnectedComponentFinder();
     finder.findConnectedComponents(this.getStaffLineImage(), this.hasWhiteForeground ? 255 : 0);
-    Map<Integer, SortedSet<Point>> labelMap = finder.makeLabelMap();
+    Map<Integer, SortedSet<OmrPoint>> labelMap = finder.makeLabelMap();
     Set<Staff> matched = new HashSet<>();
-    for (SortedSet<Point> component : labelMap.values()) {
+    for (SortedSet<OmrPoint> component : labelMap.values()) {
       this.associateComponent(component, matched);
     }
     this.staffs.clear();
     this.staffs.addAll(matched);
   }
 
-  private boolean associateComponent(SortedSet<Point> component, Set<Staff> matched) {
+  private boolean associateComponent(SortedSet<OmrPoint> component, Set<Staff> matched) {
     boolean found = false;
-    Point topLeft = component.first();
+    OmrPoint topLeft = component.first();
     for (Staff staff : this.staffs) {
       StaffLine line = staff.contains(topLeft);
       if (line != null) {
-        for (Point point : component) {
+        for (OmrPoint point : component) {
           line.addPoint(point);
         }
         // I don't like this... find better way...

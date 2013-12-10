@@ -15,7 +15,7 @@ import java.util.TreeSet;
  */
 public class ConnectedComponentFinder {
   
-  private static Point.XComparator xComparator = new Point.XComparator();
+  private static OmrPoint.XComparator xComparator = new OmrPoint.XComparator();
 
   /**
    * The union-find data structure that keeps track of the equivalences.
@@ -41,8 +41,8 @@ public class ConnectedComponentFinder {
     return this.labels;
   }
   
-  public Map<Integer, SortedSet<Point>> makeLabelMap() {
-    Map<Integer, SortedSet<Point>> map = new HashMap<>();
+  public Map<Integer, SortedSet<OmrPoint>> makeLabelMap() {
+    Map<Integer, SortedSet<OmrPoint>> map = new HashMap<>();
     if(this.labels != null) {
       for(int y = 0, height = this.labels.length; y < height; y++) {
         for(int x = 0, width = this.labels[y].length; x < width; x++) {
@@ -51,7 +51,7 @@ public class ConnectedComponentFinder {
             if(!map.containsKey(label)) {
               map.put(label, new TreeSet<>(xComparator));
             }
-            map.get(label).add(new Point(x, y));
+            map.get(label).add(new OmrPoint(x, y));
           }
         }
       }

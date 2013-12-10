@@ -49,9 +49,9 @@ public class Staff implements Cloneable {
     }
   }
 
-  public StaffLine contains(Point point) {
-    int x = point.getX();
-    int y = point.getY();
+  public StaffLine contains(OmrPoint point) {
+    int x = (int) point.x;
+    int y = (int) point.y;
     if (x >= this.leftBound && x <= this.rightBound && y >= this.topBound && y <= this.bottomBound) {
       for (StaffLine line : this.lines) {
         if (line.contains(point)) {

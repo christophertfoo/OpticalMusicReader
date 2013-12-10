@@ -1,6 +1,5 @@
 package edu.hawaii.omr;
 
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
 public abstract class NoteHead implements Comparable<NoteHead> {
