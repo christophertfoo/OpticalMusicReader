@@ -1,18 +1,17 @@
 package edu.hawaii.omr;
 
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
 public abstract class NoteHead implements Comparable<NoteHead> {
-  
+
   protected int yCoordinate;
   protected int xCoordinate;
   private static int noteWidth;
-  
+
   protected double angleRotation;
 
   protected String type;
-  
+
   public Mat template = null;
 
   public boolean adjacentTo(NoteHead fromNote) {
@@ -35,8 +34,8 @@ public abstract class NoteHead implements Comparable<NoteHead> {
   public static void setNoteWidth(int noteWidth) {
     NoteHead.noteWidth = noteWidth;
   }
-  
-  public abstract Mat makeNoteHeadTemplate() ;
+
+  public abstract Mat makeNoteHeadTemplate();
 
   public int getYCoordinate() {
     return yCoordinate;
@@ -52,7 +51,7 @@ public abstract class NoteHead implements Comparable<NoteHead> {
 
   }
 
-  public String getType(){
-	  return type;
+  public String getType() {
+    return type;
   }
 }

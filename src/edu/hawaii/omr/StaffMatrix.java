@@ -67,17 +67,17 @@ public class StaffMatrix extends ImageMatrix {
           new Point(measure.getxEndCoordinate(), measure.getyEndCoordinate()),
           new Scalar(255, 0, 0), 2);
     }
-    Core.line(image, new Point(0, staff.getTopBound()),
-        new Point(this.cols() - 1, staff.getTopBound()), new Scalar(0, 0, 255), 2);
-    Core.line(image, new Point(0, staff.getBottomBound()),
-        new Point(this.cols() - 1, staff.getBottomBound()), new Scalar(0, 0, 255), 2);
     return image;
   }
 
   public void findMeasureLines() {
+    this.findMeasureLines(true);
+  }
+
+  public void findMeasureLines(boolean removeLines) {
     this.measureLines = new TreeSet<>(measureYComparator);
     Mat lines = new Mat();
-    Imgproc.HoughLinesP(this.getNoLineImage(), lines, 1, Math.PI / 10, 5,
+    Imgproc.HoughLinesP(removeLines ? this.getNoLineImage() : this, lines, 1, Math.PI / 10, 5,
         this.info.getModeStaffHeight() - 5, 10);
 
     for (int i = 0; i < lines.cols(); i++) {
@@ -89,7 +89,7 @@ public class StaffMatrix extends ImageMatrix {
     }
   }
 
-  public List<MeasureMatrix> splitIntoMeasures() {
+  public List<MeasureMatrix> splitIntoMeasures(boolean removeLines) {
 
     if (this.measureLines == null) {
       this.findMeasureLines();
@@ -103,6 +103,8 @@ public class StaffMatrix extends ImageMatrix {
     int startX = 0;
     int endY = this.rows() - 1;
     int noteWidth = this.info.getModeLineDistance() * 2;
+
+    ImageMatrix noLines = this.getNoLineImage();
     for (MeasureLine measure : sorted) {
       if (measure.xBeginCoordinate == startX + 1) {
         startX++;
@@ -113,17 +115,22 @@ public class StaffMatrix extends ImageMatrix {
           || this.staff.contains(measure.getxEndCoordinate(), measure.getyEndCoordinate(),
               this.info, 4)) {
         MeasureMatrix measureImage =
-            new MeasureMatrix(this.submat(0, endY, startX, (int) measure.xBeginCoordinate),
-                this.staff, this.info, startX);
+            new MeasureMatrix(removeLines ? noLines.submat(0, endY, startX,
+                (int) measure.xBeginCoordinate) : this.submat(0, endY, startX,
+                (int) measure.xBeginCoordinate), this.staff, this.info, startX);
         if (measureImage.cols() >= noteWidth && Core.countNonZero(measureImage) > 0) {
           measureImages.add(measureImage);
         }
         startX = (int) Math.ceil(measure.xEndCoordinate);
       }
     }
-    measureImages.add(new MeasureMatrix(this.submat(0, endY, startX, endCol), this.staff,
-        this.info, startX));
+    measureImages.add(new MeasureMatrix(removeLines ? noLines.submat(0, endY, startX, endCol)
+        : this.submat(0, endY, startX, endCol), this.staff, this.info, startX));
     return measureImages;
+  }
+
+  public MeasureMatrix toMeasureMatrix(boolean removeLines) {
+    return new MeasureMatrix(removeLines ? this.getNoLineImage() : this, this.staff, this.info, 0);
   }
 
 }

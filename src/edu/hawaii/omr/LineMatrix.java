@@ -5,11 +5,11 @@ import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
 
 public class LineMatrix extends Mat {
-  
+
   public LineMatrix(int rows, int cols, int type) {
     super(rows, cols, type);
   }
-  
+
   public LineMatrix extendLines(int endX) {
     return this.extendLines(0, endX);
   }
@@ -33,16 +33,17 @@ public class LineMatrix extends Mat {
     }
     return this;
   }
-  
+
   /**
    * NOTE: Does NOT modify the template.
+   * 
    * @param template
    * @return
    */
   public ImageMatrix toImageMatrix(ImageMatrix template) {
     return this.toImageMatrix(template.rows(), template.cols(), template.type());
   }
-  
+
   public ImageMatrix toImageMatrix(int rows, int cols, int type) {
     ImageMatrix image = new ImageMatrix(rows, cols, type);
     int[] points = new int[4];

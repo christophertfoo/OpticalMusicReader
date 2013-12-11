@@ -5,49 +5,49 @@ import java.util.Comparator;
 public class Point implements Cloneable {
   private int x;
   private int y;
-  
+
   public Point(int x, int y) {
     this.x = x;
     this.y = y;
   }
-  
+
   public void setX(int x) {
     this.x = x;
   }
-  
-  public void setY(int y)  {
+
+  public void setY(int y) {
     this.y = y;
   }
-  
+
   public int getX() {
     return this.x;
   }
-  
+
   public int getY() {
     return this.y;
   }
-  
+
   @Override
   public Point clone() {
     return new Point(this.x, this.y);
   }
-  
+
   @Override
   public boolean equals(Object o) {
-    if(o instanceof Point) {
+    if (o instanceof Point) {
       Point other = (Point) o;
-      if(this.x == other.x && this.y == other.y) {
+      if (this.x == other.x && this.y == other.y) {
         return true;
       }
     }
     return false;
   }
-  
+
   @Override
   public String toString() {
     return "(" + this.x + ", " + this.y + ")";
   }
-  
+
   public static class XComparator implements Comparator<Point> {
 
     @Override

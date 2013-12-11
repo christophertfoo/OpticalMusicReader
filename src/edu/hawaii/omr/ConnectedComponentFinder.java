@@ -14,7 +14,7 @@ import java.util.TreeSet;
  * 
  */
 public class ConnectedComponentFinder {
-  
+
   private static Point.XComparator xComparator = new Point.XComparator();
 
   /**
@@ -30,8 +30,10 @@ public class ConnectedComponentFinder {
   /**
    * Finds the number of connected components in the given image.
    * 
-   * @param image TODO UPDATE COMMENT The {@link BufferedImage} to search.
-   * @param foreground The color of the foreground.
+   * @param image
+   *          TODO UPDATE COMMENT The {@link BufferedImage} to search.
+   * @param foreground
+   *          The color of the foreground.
    * @return The number of connected components in the image.
    */
   public int[][] findConnectedComponents(ImageMatrix image, int foreground) {
@@ -40,15 +42,15 @@ public class ConnectedComponentFinder {
     secondPass();
     return this.labels;
   }
-  
+
   public Map<Integer, SortedSet<Point>> makeLabelMap() {
     Map<Integer, SortedSet<Point>> map = new HashMap<>();
-    if(this.labels != null) {
-      for(int y = 0, height = this.labels.length; y < height; y++) {
-        for(int x = 0, width = this.labels[y].length; x < width; x++) {
+    if (this.labels != null) {
+      for (int y = 0, height = this.labels.length; y < height; y++) {
+        for (int x = 0, width = this.labels[y].length; x < width; x++) {
           int label = this.labels[y][x];
-          if(label != 0) {
-            if(!map.containsKey(label)) {
+          if (label != 0) {
+            if (!map.containsKey(label)) {
               map.put(label, new TreeSet<>(xComparator));
             }
             map.get(label).add(new Point(x, y));
@@ -62,8 +64,10 @@ public class ConnectedComponentFinder {
   /**
    * Sets up the unionFind and labels data structures.
    * 
-   * @param image TODO UPDATE COMMENT The image that will be searched for connected components.
-   * @param foreground The color of the foreground in the image.
+   * @param image
+   *          TODO UPDATE COMMENT The image that will be searched for connected components.
+   * @param foreground
+   *          The color of the foreground in the image.
    */
   private void setupDataStructures(ImageMatrix image, int foreground) {
     this.unionFind = new HashMap<>();

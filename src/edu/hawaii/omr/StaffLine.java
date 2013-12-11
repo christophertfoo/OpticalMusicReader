@@ -126,12 +126,12 @@ public class StaffLine implements Cloneable {
 
   public int getHorizontalCoverage() {
     Set<Integer> xCoordinates = new HashSet<>();
-    for(Point point : this.points) {
+    for (Point point : this.points) {
       xCoordinates.add(point.getX());
     }
     return xCoordinates.size();
   }
-  
+
   public LineEquation getLineEquation() {
     if (this.equation == null) {
       this.equation =
