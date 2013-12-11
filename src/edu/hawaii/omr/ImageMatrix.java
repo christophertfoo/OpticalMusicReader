@@ -96,6 +96,10 @@ public class ImageMatrix extends Mat {
     return difference;
   }
 
+  public ImageMatrix subtractImagePreserve(Mat other, boolean eightWay) {
+    return this.subtractImagePreserve(other, eightWay, 0);
+  }
+
   /**
    * TODO Clean up, this is kind of long...
    * 
@@ -103,7 +107,7 @@ public class ImageMatrix extends Mat {
    * @param eightWay
    * @return
    */
-  public ImageMatrix subtractImagePreserve(Mat other, boolean eightWay) {
+  public ImageMatrix subtractImagePreserve(Mat other, boolean eightWay, int horizontalBuffer) {
     ImageMatrix difference = new ImageMatrix(this.rows(), this.cols(), this.type());
 
     int numChannels = this.channels();
@@ -136,16 +140,37 @@ public class ImageMatrix extends Mat {
           if (this.get(y + yOffset, x)[0] == 255) {
             preserve = true;
           }
-          else if (eightWay && yOffset > 0) {
+          else if (yOffset > 0) {
 
-            // Check the pixel below and to the left
-            if (x > 0 && this.get(y + yOffset, x - 1)[0] == 255) {
-              preserve = true;
+            if (eightWay) {
+              // Check the pixel below and to the left
+              if (x > 0 && this.get(y + yOffset, x - 1)[0] == 255) {
+                preserve = true;
+              }
+
+              // Check the pixel below and to the right
+              else if (x < width - 1 && this.get(y + yOffset, x + 1)[0] == 255) {
+                preserve = true;
+              }
             }
 
-            // Check the pixel below and to the right
-            else if (x < this.cols() - 1 && this.get(y + yOffset, x + 1)[0] == 255) {
-              preserve = true;
+            if (horizontalBuffer > 0) {
+              boolean foundLeft = false;
+              boolean foundRight = false;
+              for (int xOffset = eightWay ? 2 : 1; xOffset < horizontalBuffer; xOffset++) {
+                if (!foundLeft && x - xOffset > 0 && this.get(y + yOffset, x - xOffset)[0] == 255) {
+                  foundLeft = true;
+                }
+                if (!foundRight && x + xOffset < width
+                    && this.get(y + yOffset, x + xOffset)[0] == 255) {
+                  foundRight = true;
+                }
+
+                if (foundLeft && foundRight) {
+                  preserve = true;
+                  break;
+                }
+              }
             }
           }
 
@@ -158,16 +183,36 @@ public class ImageMatrix extends Mat {
             if (this.get(y + yOffset, x)[0] == 255) {
               preserve = true;
             }
-            else if (eightWay && yOffset < 0) {
+            else if (yOffset < 0) {
 
-              // Check above and to the left
-              if (x > 0 && this.get(y + yOffset, x - 1)[0] == 255) {
-                preserve = true;
+              if (eightWay) {
+                // Check above and to the left
+                if (x > 0 && this.get(y + yOffset, x - 1)[0] == 255) {
+                  preserve = true;
+                }
+
+                // Check above and to the right
+                else if (x < this.cols() - 1 && this.get(y + yOffset, x + 1)[0] == 255) {
+                  preserve = true;
+                }
               }
+              if (horizontalBuffer > 0) {
+                boolean foundLeft = false;
+                boolean foundRight = false;
+                for (int xOffset = eightWay ? 2 : 1; xOffset < horizontalBuffer; xOffset++) {
+                  if (!foundLeft && x - xOffset > 0 && this.get(y + yOffset, x - xOffset)[0] == 255) {
+                    foundLeft = true;
+                  }
+                  if (!foundRight && x + xOffset < width
+                      && this.get(y + yOffset, x + xOffset)[0] == 255) {
+                    foundRight = true;
+                  }
 
-              // Check above and to the right
-              else if (x < this.cols() - 1 && this.get(y + yOffset, x + 1)[0] == 255) {
-                preserve = true;
+                  if (foundLeft && foundRight) {
+                    preserve = true;
+                    break;
+                  }
+                }
               }
             }
           }

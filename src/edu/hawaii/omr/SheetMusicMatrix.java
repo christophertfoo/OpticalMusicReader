@@ -40,14 +40,20 @@ public class SheetMusicMatrix extends ImageMatrix {
   }
 
   public StaffInfo getStaffInfo() {
+    if(this.info == null) {
+      this.findStaffInfo();
+    }
+    return this.info;
+  }
+  
+  private void findStaffInfo() {
     ExecutorService threadPool =
         Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    StaffInfo info = this.getStaffInfo(threadPool);
+    this.findStaffInfo(threadPool);
     threadPool.shutdown();
-    return info;
   }
 
-  public StaffInfo getStaffInfo(ExecutorService threadPool) {
+  private StaffInfo findStaffInfo(ExecutorService threadPool) {
 
     if (!this.isBinary) {
       this.makeBinary();
@@ -81,7 +87,7 @@ public class SheetMusicMatrix extends ImageMatrix {
 
   public void findStaffLines() {
     if (this.info == null) {
-      this.getStaffInfo();
+      this.findStaffInfo();
     }
     this.staffs = new TreeSet<>(staffComparator);
     Range distanceRange = this.info.getModeLineDistance(modeThreshold);
@@ -332,6 +338,10 @@ public class SheetMusicMatrix extends ImageMatrix {
   public void mergeStaffs() {
     this.mergeConnectedStaffs();
     this.mergeSeparatedStaffs();
+    for(Staff staff: this.staffs) {
+      int endX = this.cols() - 1;
+      staff.extend(0, endX);
+  }
   }
 
   public List<StaffMatrix> splitImage() {
