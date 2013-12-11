@@ -160,10 +160,12 @@ public class StaffLine implements Cloneable {
       this.addPoint(new Point(point.getX(), point.getY() + amount));
     }
   }
-  
+
   public void extend(int leftEdgeX, int rightEdgeX) {
-    this.addPoint(new Point(leftEdgeX, (int) Math.round(this.getLineEquation().calculateY(leftEdgeX))));
-    this.addPoint(new Point(rightEdgeX, (int) Math.round(this.getLineEquation().calculateY(rightEdgeX))));
+    this.addPoint(new Point(leftEdgeX, (int) Math.round(this.getLineEquation()
+        .calculateY(leftEdgeX))));
+    this.addPoint(new Point(rightEdgeX, (int) Math.round(this.getLineEquation().calculateY(
+        rightEdgeX))));
   }
 
   public void addToImage(ImageMatrix image) {

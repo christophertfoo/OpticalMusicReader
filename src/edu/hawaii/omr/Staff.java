@@ -72,9 +72,9 @@ public class Staff implements Cloneable {
     }
     this.setBounds();
   }
-  
+
   public void extend(int leftEdgeX, int rightEdgeX) {
-    for(StaffLine line : this.lines) {
+    for (StaffLine line : this.lines) {
       line.extend(leftEdgeX, rightEdgeX);
     }
     this.setBounds();
