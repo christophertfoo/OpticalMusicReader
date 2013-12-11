@@ -65,11 +65,16 @@ public class Driver {
 
   private static void runStaffTests(String folder, List<StaffMatrix> staffs, boolean removeLines) {
     int i = 1;
+    int j = 1;
     Helpers.makeFolder(folder);
     StringBuilder builder = new StringBuilder();
     for (StaffMatrix staff : staffs) {
       staff.findMeasureLines(removeLines);
       staff.getMeasureLineImage().writeImage(folder + "/staff_" + i + ".png");
+      for(MeasureMatrix measure : staff.splitIntoMeasures(removeLines)) {
+        measure.writeImage(folder + "/measure_" + j + ".png");
+        j++;
+      }
       MeasureMatrix measure = staff.toMeasureMatrix(removeLines);
       measure.getNoteLocationsImage().writeImage(folder + "/notes_" + i + ".png");
       measure.getPitches(builder);
