@@ -170,9 +170,9 @@ public class StaffLine implements Cloneable {
   }
 
   public void extend(int leftEdgeX, int rightEdgeX) {
-    this.addPoint(new Point(leftEdgeX, (int) Math.round(this.getLineEquation()
+    this.addPoint(new OmrPoint(leftEdgeX, (int) Math.round(this.getLineEquation()
         .calculateY(leftEdgeX))));
-    this.addPoint(new Point(rightEdgeX, (int) Math.round(this.getLineEquation().calculateY(
+    this.addPoint(new OmrPoint(rightEdgeX, (int) Math.round(this.getLineEquation().calculateY(
         rightEdgeX))));
   }
 
@@ -220,9 +220,7 @@ public class StaffLine implements Cloneable {
 
   public boolean contains(double x, double y, StaffInfo info) {
     if (this.equation == null) {
-      this.equation =
-          new LineEquation(this.getLeftEdgeX(), this.leftEdgeMiddleY, this.getRightEdgeX(),
-              this.getRightEdgeMiddleY());
+      this.getLineEquation();
     }
 
     double margin = Math.ceil(info.getModeLineHeight(modeThreshold).getUpperBound() / 2.0);
