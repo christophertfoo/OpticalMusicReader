@@ -8,12 +8,6 @@ public class HalfNote extends NoteHead {
   private double height;
   public final double threshold = 0.60;
 
-  // public HalfNoteDetection(double height, double templateThreshold) {
-  // super(height, templateThreshold);
-  // super.type = "Half";
-  //
-  // }
-
   public HalfNote(int xCoordinate, int yCoordinate) {
     super.xCoordinate = xCoordinate;
     super.yCoordinate = yCoordinate;
@@ -24,7 +18,6 @@ public class HalfNote extends NoteHead {
     this.height = height;
   }
 
-  @Override
   public Mat makeNoteHeadTemplate() {
     super.angleRotation = angle;
 

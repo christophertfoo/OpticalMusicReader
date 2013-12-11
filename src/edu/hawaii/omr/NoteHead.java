@@ -18,7 +18,7 @@ public abstract class NoteHead implements Comparable<NoteHead> {
     boolean ret;
 
     // distance formula used to find if note is adjacent and is a double counted note.
-    int width = (int) (noteWidth / 2.0);
+    int width = (int) (noteWidth);
     double xDistance = Math.pow(xCoordinate - fromNote.getXCoordinate(), 2);
     double yDistance = Math.pow(yCoordinate - fromNote.getYCoordinate(), 2);
     double totalDistance = Math.sqrt(xDistance + yDistance);
