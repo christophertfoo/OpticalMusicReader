@@ -30,8 +30,10 @@ public class ConnectedComponentFinder {
   /**
    * Finds the number of connected components in the given image.
    * 
-   * @param image TODO UPDATE COMMENT The {@link BufferedImage} to search.
-   * @param foreground The color of the foreground.
+   * @param image
+   *          TODO UPDATE COMMENT The {@link BufferedImage} to search.
+   * @param foreground
+   *          The color of the foreground.
    * @return The number of connected components in the image.
    */
   public int[][] findConnectedComponents(ImageMatrix image, int foreground) {
@@ -62,8 +64,10 @@ public class ConnectedComponentFinder {
   /**
    * Sets up the unionFind and labels data structures.
    * 
-   * @param image TODO UPDATE COMMENT The image that will be searched for connected components.
-   * @param foreground The color of the foreground in the image.
+   * @param image
+   *          TODO UPDATE COMMENT The image that will be searched for connected components.
+   * @param foreground
+   *          The color of the foreground in the image.
    */
   private void setupDataStructures(ImageMatrix image, int foreground) {
     this.unionFind = new HashMap<>();

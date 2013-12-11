@@ -73,6 +73,13 @@ public class Staff implements Cloneable {
     this.setBounds();
   }
 
+  public void extend(int leftEdgeX, int rightEdgeX) {
+    for (StaffLine line : this.lines) {
+      line.extend(leftEdgeX, rightEdgeX);
+    }
+    this.setBounds();
+  }
+
   public int getTopBound() {
     return this.topBound;
   }
@@ -92,7 +99,7 @@ public class Staff implements Cloneable {
   public int getHorizontalCoverage() {
     return this.horizontalCoverage;
   }
-  
+
   public String getPitchTreble(double x, double y, StaffInfo info) {
     StringBuilder pitchBuilder = new StringBuilder();
     double halfLineHeight = info.getModeLineHeight() / 2.0;
@@ -105,29 +112,29 @@ public class Staff implements Cloneable {
       double line3Center = this.lines[2].getLineEquation().calculateY(x);
       double line4Center = this.lines[3].getLineEquation().calculateY(x);
       double line5Center = this.lines[4].getLineEquation().calculateY(x);
-      
-      if(y < line1Center || y <= line1Center + margin) {
+
+      if (y < line1Center || y <= line1Center + margin) {
         pitchBuilder.append("F5");
       }
-      else if(y < line2Center - margin) {
+      else if (y < line2Center - margin) {
         pitchBuilder.append("E5");
       }
-      else if(y <= line2Center + margin) {
+      else if (y <= line2Center + margin) {
         pitchBuilder.append("D5");
       }
-      else if(y < line3Center - margin) {
+      else if (y < line3Center - margin) {
         pitchBuilder.append("C5");
       }
-      else if(y <= line3Center + margin) {
+      else if (y <= line3Center + margin) {
         pitchBuilder.append("B4");
       }
-      else if(y < line4Center - margin) {
+      else if (y < line4Center - margin) {
         pitchBuilder.append("A4");
       }
-      else if(y <= line4Center + margin) {
+      else if (y <= line4Center + margin) {
         pitchBuilder.append("G4");
       }
-      else if(y <= line5Center - margin) {
+      else if (y <= line5Center - margin) {
         pitchBuilder.append("F4");
       }
       else {
@@ -215,7 +222,7 @@ public class Staff implements Cloneable {
     }
     return pitch;
   }
-  
+
   private String getPitchBelowTreble(int ledgerLine, boolean half) {
     String pitch = "";
     if (ledgerLine == 0) {
@@ -305,12 +312,12 @@ public class Staff implements Cloneable {
       else if (rightX < rightValue) {
         rightX = rightValue;
       }
-      
+
       lengthValue = line.getHorizontalCoverage();
-      if(length == -1) {
+      if (length == -1) {
         length = lengthValue;
       }
-      else if(length > lengthValue) {
+      else if (length > lengthValue) {
         length = lengthValue;
       }
     }

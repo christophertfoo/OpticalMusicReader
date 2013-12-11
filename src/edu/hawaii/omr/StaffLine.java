@@ -169,6 +169,13 @@ public class StaffLine implements Cloneable {
     }
   }
 
+  public void extend(int leftEdgeX, int rightEdgeX) {
+    this.addPoint(new Point(leftEdgeX, (int) Math.round(this.getLineEquation()
+        .calculateY(leftEdgeX))));
+    this.addPoint(new Point(rightEdgeX, (int) Math.round(this.getLineEquation().calculateY(
+        rightEdgeX))));
+  }
+
   public void addToImage(ImageMatrix image) {
     double middleLeft = (this.getLeftEdgeBottomY() + this.getLeftEdgeTopY()) / 2.0;
     int leftX = this.getLeftEdgeX();

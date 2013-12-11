@@ -143,24 +143,30 @@ public class MeasureMatrix extends ImageMatrix {
     image_rgb = null;
 
     Point matchLoc;
+    Point matchLocBox;
 
+    int boxSize = this.info.getModeLineDistance();
     for (NoteHead center : this.noteCenters) {
 
       matchLoc = new Point(center.getXCoordinate(), center.getYCoordinate());
+      matchLocBox = new Point(center.getXCoordinate() - boxSize, center.getYCoordinate() - boxSize);
 
       // Make a box
-      // Point boxPoint = new Point(matchLoc.x + template.cols(), matchLoc.y + template.rows());
+       Point boxPoint = new Point(matchLoc.x + boxSize, matchLoc.y + boxSize);
 
       // Makes a point
-      Point boxPoint = new Point(matchLoc.x, matchLoc.y);
+      Point midPoint = new Point(matchLoc.x, matchLoc.y);
       if (center.getType().equals("Whole")) {
-        Core.rectangle(image, matchLoc, boxPoint, new Scalar(255, 0, 0)); // blue
+        Core.rectangle(image, matchLoc, midPoint, new Scalar(255, 0, 0)); // blue
+        Core.rectangle(image, matchLocBox, boxPoint, new Scalar(255, 0, 0));
       }
       else if (center.getType().equals("Half")) {
-        Core.rectangle(image, matchLoc, boxPoint, new Scalar(0, 255, 0)); // green
+        Core.rectangle(image, matchLoc, midPoint, new Scalar(0, 255, 0)); // green
+        Core.rectangle(image, matchLocBox, boxPoint, new Scalar(0, 255, 0));
       }
       else if (center.getType().equals("Quarter")) {
-        Core.rectangle(image, matchLoc, boxPoint, new Scalar(0, 0, 255)); // red
+        Core.rectangle(image, matchLoc, midPoint, new Scalar(0, 0, 255)); // red
+        Core.rectangle(image, matchLocBox, boxPoint, new Scalar(0, 0, 255));
       }
 
     }
