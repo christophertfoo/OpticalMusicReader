@@ -5,6 +5,7 @@ import java.util.List;
 import org.jfugue.MusicStringParser;
 import org.jfugue.MusicXmlRenderer;
 import org.jfugue.Pattern;
+import org.jfugue.Player;
 import org.opencv.core.Core;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
@@ -53,11 +54,8 @@ public class Driver {
 
       System.out.println("Splitting the staffs into measures...");
 
-      runStaffTests("results/" + file + "/staffs_line", staffs, false);
+//      runStaffTests("results/" + file + "/staffs_line", staffs, false);
       runStaffTests("results/" + file + "/staffs_noline", staffs, true);
-
-      runMeasureTests("results/" + file + "/measures_line", staffs, false);
-      runMeasureTests("results/" + file + "/measures_noline", staffs, true);
     }
 
     System.out.println("Finished.");
@@ -88,28 +86,10 @@ public class Driver {
     String musicXml = renderer.getMusicXMLString();
     Helpers.writeToFile(folder + "/musicXml.xml", musicXml);
     Helpers.writeToFile(folder + "/musicstring.txt", builder.toString());
-  }
-
-  private static void runMeasureTests(String folder, List<StaffMatrix> staffs, boolean removeLines) {
-    int i = 1;
-    Helpers.makeFolder(folder);
-
-    StringBuilder builder = new StringBuilder();
-    for (StaffMatrix staff : staffs) {
-      List<MeasureMatrix> measures = staff.splitIntoMeasures(removeLines);
-      for (MeasureMatrix measure : measures) {
-        measure.getNoteLocationsImage().writeImage(folder + "/measure_" + i + ".png");
-        measure.getPitches(builder);
-        i++;
-      }
-    }
-    MusicStringParser parser = new MusicStringParser();
-    MusicXmlRenderer renderer = new MusicXmlRenderer();
-    parser.addParserListener(renderer);
-    parser.parse(new Pattern(builder.toString()));
-
-    String musicXml = renderer.getMusicXMLString();
-    Helpers.writeToFile(folder + "/musicXml.xml", musicXml);
-    Helpers.writeToFile(folder + "/musicstring.txt", builder.toString());
+    
+    System.out.println("Waiting...");
+    Player player = new Player();
+    player.play(builder.toString());
+    player.close();
   }
 }
